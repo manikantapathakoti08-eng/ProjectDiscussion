@@ -13,7 +13,7 @@ import com.example.skillSwap.repository.AdminActivityRepository;
 import com.example.skillSwap.repository.UserRepository;
 import com.example.skillSwap.security.JwtUtil;
 import com.example.skillSwap.service.NotificationService;
-import com.example.skillSwap.service.RedisOtpService;
+import com.example.skillSwap.service.OtpService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.security.core.Authentication;
@@ -34,7 +34,7 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AdminActivityRepository adminActivityRepository;
-    private final RedisOtpService redisOtpService;
+    private final OtpService otpService;
     private final NotificationService notificationService;
 
     // ---------------- SIGNUP (DISABLED) ----------------
@@ -132,8 +132,8 @@ public class AuthController {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new ApiException("User not found with that email"));
 
-        // Generate 6-digit random OTP and store in Redis
-        String otp = redisOtpService.generateAndStoreOtp(user.getEmail());
+        // Generate 6-digit random OTP and store in memory
+        String otp = otpService.generateAndStoreOtp(user.getEmail());
 
         // Send Email
         notificationService.sendOtpEmail(user.getEmail(), otp);
@@ -145,7 +145,7 @@ public class AuthController {
     @PostMapping("/reset-password")
     @Transactional
     public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
-        boolean isValid = redisOtpService.validateOtp(request.getEmail(), request.getOtp());
+        boolean isValid = otpService.validateOtp(request.getEmail(), request.getOtp());
 
         if (!isValid) {
             throw new ApiException("Invalid or expired OTP. Please request a new one.");
