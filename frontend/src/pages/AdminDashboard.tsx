@@ -11,7 +11,7 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [activeTab, setActiveTab] = useState<'sessions' | 'users' | 'disputes' | 'topics' | 'onboarding'>('sessions');
+  const [activeTab, setActiveTab] = useState<'sessions' | 'users' | 'disputes' | 'topics' | 'onboarding'>('users');
   const [roleFilter, setRoleFilter] = useState<'ALL' | 'STUDENT' | 'GUIDE' | 'ADMIN'>('ALL');
   
   // Onboarding Form State
@@ -131,19 +131,6 @@ export default function AdminDashboard() {
         <h2 className="heading-m text-gradient" style={{ color: 'var(--error)' }}>Admin Control</h2>
         
         <nav className="flex-col gap-2">
-          <button onClick={() => setActiveTab('topics')} className="flex-center gap-4" style={{ padding: '1rem', background: activeTab === 'topics' ? 'rgba(239, 68, 68, 0.1)' : 'transparent', borderRadius: '12px', justifyContent: 'flex-start', border: activeTab === 'topics' ? '1px solid rgba(239, 68, 68, 0.3)' : 'none', color: activeTab === 'topics' ? 'var(--error)' : 'var(--text-secondary)', cursor: 'pointer', textAlign: 'left', width: '100%', position: 'relative' }}>
-             <BadgeCheck size={20} />
-             <span style={{ fontWeight: 500 }}>Topic Requests</span>
-             {topicRequests && topicRequests.length > 0 && (
-                <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'var(--accent-primary)', color: 'white', fontSize: '0.7rem', padding: '2px 8px', borderRadius: '10px', fontWeight: 700 }}>
-                   {topicRequests.length}
-                </span>
-             )}
-          </button>
-          <button onClick={() => setActiveTab('sessions')} className="flex-center gap-4" style={{ padding: '1rem', background: activeTab === 'sessions' ? 'rgba(239, 68, 68, 0.1)' : 'transparent', borderRadius: '12px', justifyContent: 'flex-start', border: activeTab === 'sessions' ? '1px solid rgba(239, 68, 68, 0.3)' : 'none', color: activeTab === 'sessions' ? 'var(--error)' : 'var(--text-secondary)', cursor: 'pointer', textAlign: 'left', width: '100%' }}>
-             <ListFilter size={20} />
-             <span style={{ fontWeight: 500 }}>Live Discussions</span>
-          </button>
           <button onClick={() => setActiveTab('users')} className="flex-center gap-4" style={{ padding: '1rem', background: activeTab === 'users' ? 'rgba(239, 68, 68, 0.1)' : 'transparent', borderRadius: '12px', justifyContent: 'flex-start', border: activeTab === 'users' ? '1px solid rgba(239, 68, 68, 0.3)' : 'none', color: activeTab === 'users' ? 'var(--error)' : 'var(--text-secondary)', cursor: 'pointer', textAlign: 'left', width: '100%' }}>
              <Users size={20} />
              <span style={{ fontWeight: 500 }}>Manage Users</span>
@@ -151,27 +138,6 @@ export default function AdminDashboard() {
           <button onClick={() => setActiveTab('onboarding')} className="flex-center gap-4" style={{ padding: '1rem', background: activeTab === 'onboarding' ? 'rgba(239, 68, 68, 0.1)' : 'transparent', borderRadius: '12px', justifyContent: 'flex-start', border: activeTab === 'onboarding' ? '1px solid rgba(239, 68, 68, 0.3)' : 'none', color: activeTab === 'onboarding' ? 'var(--error)' : 'var(--text-secondary)', cursor: 'pointer', textAlign: 'left', width: '100%' }}>
              <UserPlus size={20} />
              <span style={{ fontWeight: 500 }}>User Onboarding</span>
-          </button>
-          <button onClick={() => setActiveTab('disputes')} className="flex-center gap-4" style={{ padding: '1rem', background: activeTab === 'disputes' ? 'rgba(239, 68, 68, 0.1)' : 'transparent', borderRadius: '12px', justifyContent: 'flex-start', border: activeTab === 'disputes' ? '1px solid rgba(239, 68, 68, 0.3)' : 'none', color: activeTab === 'disputes' ? 'var(--error)' : 'var(--text-secondary)', cursor: 'pointer', textAlign: 'left', width: '100%', position: 'relative' }}>
-             <AlertTriangle size={20} />
-             <span style={{ fontWeight: 500 }}>Disputes</span>
-             {disputeCount > 0 && (
-                <span style={{ 
-                  position: 'absolute', 
-                  right: '12px', 
-                  top: '50%', 
-                  transform: 'translateY(-50%)', 
-                  background: 'var(--error)', 
-                  color: 'white', 
-                  fontSize: '0.7rem', 
-                  padding: '2px 8px', 
-                  borderRadius: '10px',
-                  fontWeight: 700,
-                  boxShadow: '0 0 10px rgba(239, 68, 68, 0.5)'
-                }}>
-                   {disputeCount}
-                </span>
-             )}
           </button>
         </nav>
 
