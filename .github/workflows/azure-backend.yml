@@ -58,25 +58,39 @@ jobs:
             SPRING_DATA_REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
             EOF
 
-            # Kill any existing process on 8080 and any running Java apps
-            sudo fuser -k 8080/tcp || true
-            pkill -f "java -jar" || true
-            sleep 2
-            
-            # Start the newest uploaded application
+            # Find the newest uploaded JAR and rename it to app.jar
             cd /home/azureuser/app
-            NEWEST_JAR=$(ls -t *.jar | head -n 1)
+            NEWEST_JAR=$(ls -t *.jar | grep -v 'app.jar' | head -n 1)
             
-            if [ -z "$NEWEST_JAR" ]; then
-              echo "ERROR: No JAR file found in /home/azureuser/app"
-              exit 1
+            if [ -n "$NEWEST_JAR" ]; then
+              echo "Deploying new JAR: $NEWEST_JAR"
+              cp "$NEWEST_JAR" app.jar
             fi
             
-            echo "Starting application: $NEWEST_JAR"
-            nohup java -jar "$NEWEST_JAR" > app.log 2>&1 </dev/null &
+            # Create or update the systemd service
+            sudo bash -c 'cat > /etc/systemd/system/projectdiscussion.service <<EOT
+            [Unit]
+            Description=ProjectDiscussion Backend
+            After=network.target
+
+            [Service]
+            User=azureuser
+            WorkingDirectory=/home/azureuser/app
+            ExecStart=/usr/bin/java -jar /home/azureuser/app/app.jar
+            SuccessExitStatus=143
+            Restart=always
+            RestartSec=5
+            EnvironmentFile=/home/azureuser/app/.env
+
+            [Install]
+            WantedBy=multi-user.target
+            EOT'
             
-            # Wait a moment to ensure it doesn't crash immediately
-            sleep 3
-            echo "Deployment script finished."
+            # Reload systemd and restart the app securely
+            sudo systemctl daemon-reload
+            sudo systemctl enable projectdiscussion
+            sudo systemctl restart projectdiscussion
+            
+            echo "Deployment successful. App is running via systemd."
 
 
