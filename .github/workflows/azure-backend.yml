@@ -6,6 +6,7 @@ on:
       - master
     paths:
       - 'Backend/**'
+      - '.github/workflows/azure-backend.yml'
 
 jobs:
   build-and-deploy:
