@@ -1,0 +1,21 @@
+package com.example.skillSwap.dto;
+
+import com.example.skillSwap.enums.SessionStatus;
+import java.time.LocalDateTime;
+
+public record SessionResponseDTO(
+        Long id,
+        String topicName,
+        int durationHours,
+        SessionStatus status,
+        String studentName,
+        String guideName,
+        LocalDateTime startTime,
+        LocalDateTime guideJoinedAt,
+        LocalDateTime studentJoinedAt,
+        LocalDateTime guideLastHeartbeatAt,
+        LocalDateTime studentLastHeartbeatAt,
+        String disputeReason,
+        boolean isReviewed,
+        String meetingLink
+) {}
