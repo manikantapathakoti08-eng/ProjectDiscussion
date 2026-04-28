@@ -30,10 +30,9 @@ public class SessionController {
     public ResponseEntity<SessionResponseDTO> createProjectRequest(
             @PathVariable Long availabilityId,
             @RequestParam String topicName, 
-            @RequestParam(defaultValue = "1") int durationHours,
             Principal principal) {
         User student = userService.getUserByEmail(principal.getName());
-        Session session = sessionService.createProjectRequest(availabilityId, topicName, durationHours, student);
+        Session session = sessionService.createProjectRequest(availabilityId, topicName, student);
         return ResponseEntity.ok(SessionMapper.toDTO(session));
     }
     

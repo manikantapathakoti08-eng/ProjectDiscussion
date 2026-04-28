@@ -36,8 +36,14 @@ public class Session {
     @Column(name = "topic_name", nullable = false)
     private String projectTopic;
 
-    @Column(name = "duration_hours", nullable = false)
-    private Integer durationHours;
+    @Column(name = "start_time")
+    private LocalDateTime startTime;
+
+    @Column(name = "end_time")
+    private LocalDateTime endTime;
+
+    @Column(name = "duration_minutes", nullable = false)
+    private Integer durationMinutes;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)

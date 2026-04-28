@@ -1,45 +1,37 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import basicSsl from '@vitejs/plugin-basic-ssl';
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    react(),
-    basicSsl()
+    react()
   ],
   server: {
     port: 5173,
     proxy: {
       '/auth': {
-        target: 'https://localhost:8443',
-        secure: false, // Bypass SSL validation for backend self-signed cert
+        target: 'http://localhost:8080',
         changeOrigin: true,
       },
       '/api': {
-        target: 'https://localhost:8443',
-        secure: false,
+        target: 'http://localhost:8080',
         changeOrigin: true,
       },
       '/ws-chat': {
-        target: 'wss://localhost:8443',
+        target: 'ws://localhost:8080',
         ws: true,
-        secure: false,
         changeOrigin: true,
       },
       '/swagger-ui': {
-        target: 'https://localhost:8443',
-        secure: false,
+        target: 'http://localhost:8080',
         changeOrigin: true,
       },
       '/api-docs': {
-        target: 'https://localhost:8443',
-        secure: false,
+        target: 'http://localhost:8080',
         changeOrigin: true,
       },
       '/uploads': {
-        target: 'https://localhost:8443',
-        secure: false,
+        target: 'http://localhost:8080',
         changeOrigin: true,
       }
     },

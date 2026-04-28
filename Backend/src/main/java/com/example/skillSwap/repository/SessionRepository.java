@@ -39,4 +39,12 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
 
     long countByGuideAndStatus(User guide, SessionStatus status);
     long countByStudentAndStatus(User student, SessionStatus status);
+
+    // 🚀 NEW: Check if student has already booked today
+    @Query("SELECT COUNT(s) FROM Session s WHERE s.student = :student AND s.startTime >= :startOfDay AND s.startTime <= :endOfDay AND s.status != 'CANCELLED'")
+    long countStudentSessionsInDay(@Param("student") User student, @Param("startOfDay") java.time.LocalDateTime startOfDay, @Param("endOfDay") java.time.LocalDateTime endOfDay);
+
+    // 🚀 NEW: Find existing sessions for a guide in a window to find gaps
+    @Query("SELECT s FROM Session s WHERE s.guide = :guide AND s.startTime >= :startWindow AND s.endTime <= :endWindow AND s.status != 'CANCELLED' ORDER BY s.startTime ASC")
+    List<Session> findSessionsInWindow(@Param("guide") User guide, @Param("startWindow") java.time.LocalDateTime startWindow, @Param("endWindow") java.time.LocalDateTime endWindow);
 }

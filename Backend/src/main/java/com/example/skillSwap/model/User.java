@@ -6,10 +6,8 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
-import com.example.skillSwap.enums.RequestStatus;
 import com.example.skillSwap.enums.Role;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -44,6 +42,16 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Column(unique = true)
+    private String registrationNumber; // Unique ID for Admin/Guide/Student
+
+    private String phoneNumber;
+
+    private boolean mustChangePassword = true;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_guide_id")
+    private User assignedGuide;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -62,9 +70,4 @@ public class User {
     )
     @Column(name = "topic_name")
     private List<String> topics;
-
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "last_seen_guide_req_status")
-    private RequestStatus lastSeenGuideRequestStatus;
-}
+}

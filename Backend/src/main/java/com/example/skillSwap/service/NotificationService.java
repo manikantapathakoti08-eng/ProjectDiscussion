@@ -183,4 +183,28 @@ public class NotificationService {
             System.err.println("Failed to send Rejection email to " + to + ": " + e.getMessage());
         }
     }
+
+    @Async
+    public void sendOnboardingEmail(String toEmail, String name, String tempPassword, String role) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(toEmail);
+            message.setSubject("🎉 Welcome to SkillSwap - Your Account is Ready!");
+            
+            String body = "Hi " + name + ",\n\n"
+                    + "Your account has been successfully created as a " + role + ".\n\n"
+                    + "Please use the following credentials to log in:\n"
+                    + "📧 Email: " + toEmail + "\n"
+                    + "🔑 Temporary Password: " + tempPassword + "\n\n"
+                    + "IMPORTANT: You will be asked to change your password during your first login for security.\n\n"
+                    + "Welcome aboard!\n"
+                    + "The Admin Team";
+
+            message.setText(body);
+            mailSender.send(message); 
+            System.out.println("✅ Onboarding Email sent successfully to " + toEmail);
+        } catch (Exception e) {
+            System.err.println("Failed to send onboarding email: " + e.getMessage());
+        }
+    }
 }

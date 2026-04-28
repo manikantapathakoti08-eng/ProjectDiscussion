@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getPendingGuideRequests, approveGuideRequest, rejectGuideRequest, getAllSessions, getAllUsers, resolveDispute, getDisputedSessions, getPendingTopicRequests, approveTopicRequest, rejectTopicRequest } from '../api/admin.api';
-import { LogOut, ShieldAlert, Users, ListFilter, Check, Loader2, FileText, XCircle, MessageSquare, AlertTriangle, Clock as ClockIcon, BadgeCheck, Globe } from 'lucide-react';
+import { getAllSessions, getAllUsers, resolveDispute, getDisputedSessions, getPendingTopicRequests, approveTopicRequest, rejectTopicRequest, onboardUser } from '../api/admin.api';
+import { LogOut, Users, ListFilter, Check, Loader2, FileText, XCircle, AlertTriangle, Clock as ClockIcon, BadgeCheck, Globe, Filter, UserPlus, Phone, Mail as MailIcon, Hash } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 
@@ -11,7 +11,19 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [activeTab, setActiveTab] = useState<'requests' | 'sessions' | 'users' | 'disputes' | 'topics'>('requests');
+  const [activeTab, setActiveTab] = useState<'sessions' | 'users' | 'disputes' | 'topics' | 'onboarding'>('sessions');
+  const [roleFilter, setRoleFilter] = useState<'ALL' | 'STUDENT' | 'GUIDE' | 'ADMIN'>('ALL');
+  
+  // Onboarding Form State
+  const [onboardForm, setOnboardForm] = useState({
+    name: '',
+    email: '',
+    registrationNumber: '',
+    phoneNumber: '',
+    role: 'STUDENT' as 'STUDENT' | 'GUIDE' | 'ADMIN',
+    assignedGuideRegistrationNumber: ''
+  });
+
   const [adminNotes, setAdminNotes] = useState<Record<number, string>>({});
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
@@ -25,12 +37,6 @@ export default function AdminDashboard() {
   };
 
   const isLocalUpload = (url: string) => url?.startsWith('/uploads');
-
-  const { data: guideReqs, isLoading: reqLoading } = useQuery({
-    queryKey: ['adminRequests'],
-    queryFn: getPendingGuideRequests,
-    refetchInterval: 15000,
-  });
 
   const { data: sessions, isLoading: sessLoading } = useQuery({
     queryKey: ['adminSessions'],
@@ -69,28 +75,6 @@ export default function AdminDashboard() {
     }
   });
 
-  const appMutation = useMutation({
-    mutationFn: ({ id, notes }: { id: number, notes: string }) => approveGuideRequest(id, notes || 'Approved by Admin'),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['adminRequests'] });
-      setIsRejection(false);
-      setSuccessMsg('Guide Promoted Successfully!');
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
-    }
-  });
-
-  const rejectMutation = useMutation({
-    mutationFn: ({ id, notes }: { id: number, notes: string }) => rejectGuideRequest(id, notes || 'Rejected by Admin'),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['adminRequests'] });
-      setIsRejection(true);
-      setSuccessMsg('Guide Application Rejected.');
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
-    }
-  });
-
   const appTopicMutation = useMutation({
     mutationFn: ({ id, notes }: { id: number, notes: string }) => approveTopicRequest(id, notes || 'Approved'),
     onSuccess: () => {
@@ -113,6 +97,28 @@ export default function AdminDashboard() {
     }
   });
 
+  const onboardMutation = useMutation({
+    mutationFn: (data: any) => onboardUser(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+      setIsRejection(false);
+      setSuccessMsg('User Onboarded Successfully!');
+      setShowSuccess(true);
+      setOnboardForm({
+        name: '',
+        email: '',
+        registrationNumber: '',
+        phoneNumber: '',
+        role: 'STUDENT',
+        assignedGuideRegistrationNumber: ''
+      });
+      setTimeout(() => setShowSuccess(false), 3000);
+    },
+    onError: (err: any) => {
+      alert(err.response?.data?.message || 'Onboarding failed');
+    }
+  });
+
   const handleLogout = () => {
     logout();
     navigate('/');
@@ -125,10 +131,6 @@ export default function AdminDashboard() {
         <h2 className="heading-m text-gradient" style={{ color: 'var(--error)' }}>Admin Control</h2>
         
         <nav className="flex-col gap-2">
-          <button onClick={() => setActiveTab('requests')} className="flex-center gap-4" style={{ padding: '1rem', background: activeTab === 'requests' ? 'rgba(239, 68, 68, 0.1)' : 'transparent', borderRadius: '12px', justifyContent: 'flex-start', border: activeTab === 'requests' ? '1px solid rgba(239, 68, 68, 0.3)' : 'none', color: activeTab === 'requests' ? 'var(--error)' : 'var(--text-secondary)', cursor: 'pointer', textAlign: 'left', width: '100%' }}>
-             <ShieldAlert size={20} />
-             <span style={{ fontWeight: 500 }}>Guide Applications</span>
-          </button>
           <button onClick={() => setActiveTab('topics')} className="flex-center gap-4" style={{ padding: '1rem', background: activeTab === 'topics' ? 'rgba(239, 68, 68, 0.1)' : 'transparent', borderRadius: '12px', justifyContent: 'flex-start', border: activeTab === 'topics' ? '1px solid rgba(239, 68, 68, 0.3)' : 'none', color: activeTab === 'topics' ? 'var(--error)' : 'var(--text-secondary)', cursor: 'pointer', textAlign: 'left', width: '100%', position: 'relative' }}>
              <BadgeCheck size={20} />
              <span style={{ fontWeight: 500 }}>Topic Requests</span>
@@ -145,6 +147,10 @@ export default function AdminDashboard() {
           <button onClick={() => setActiveTab('users')} className="flex-center gap-4" style={{ padding: '1rem', background: activeTab === 'users' ? 'rgba(239, 68, 68, 0.1)' : 'transparent', borderRadius: '12px', justifyContent: 'flex-start', border: activeTab === 'users' ? '1px solid rgba(239, 68, 68, 0.3)' : 'none', color: activeTab === 'users' ? 'var(--error)' : 'var(--text-secondary)', cursor: 'pointer', textAlign: 'left', width: '100%' }}>
              <Users size={20} />
              <span style={{ fontWeight: 500 }}>Manage Users</span>
+          </button>
+          <button onClick={() => setActiveTab('onboarding')} className="flex-center gap-4" style={{ padding: '1rem', background: activeTab === 'onboarding' ? 'rgba(239, 68, 68, 0.1)' : 'transparent', borderRadius: '12px', justifyContent: 'flex-start', border: activeTab === 'onboarding' ? '1px solid rgba(239, 68, 68, 0.3)' : 'none', color: activeTab === 'onboarding' ? 'var(--error)' : 'var(--text-secondary)', cursor: 'pointer', textAlign: 'left', width: '100%' }}>
+             <UserPlus size={20} />
+             <span style={{ fontWeight: 500 }}>User Onboarding</span>
           </button>
           <button onClick={() => setActiveTab('disputes')} className="flex-center gap-4" style={{ padding: '1rem', background: activeTab === 'disputes' ? 'rgba(239, 68, 68, 0.1)' : 'transparent', borderRadius: '12px', justifyContent: 'flex-start', border: activeTab === 'disputes' ? '1px solid rgba(239, 68, 68, 0.3)' : 'none', color: activeTab === 'disputes' ? 'var(--error)' : 'var(--text-secondary)', cursor: 'pointer', textAlign: 'left', width: '100%', position: 'relative' }}>
              <AlertTriangle size={20} />
@@ -270,72 +276,6 @@ export default function AdminDashboard() {
                 </div>
              )}
 
-             {/* Pending Requests Tab */}
-             {activeTab === 'requests' && (
-                <div className="flex-col gap-6">
-                  <h3 className="heading-m flex-between"><span>Pending Guide Applications</span> <span className="badge badge-warning">{guideReqs?.length || 0}</span></h3>
-                  <hr style={{ border: 'none', borderTop: '1px solid var(--glass-border)', margin: '1rem 0' }} />
-                  
-                  {reqLoading ? <div className="flex-center"><Loader2 className="spinner" /></div> :
-                   !guideReqs || guideReqs.length === 0 ? <p style={{ color: 'var(--text-muted)' }}>No applications to review.</p> :
-                   guideReqs.map((req: any) => (
-                     <div key={req.id} className="flex-col gap-4" style={{ background: 'rgba(255,255,255,0.03)', padding: '2rem', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
-                        <div className="flex-between">
-                            <div>
-                                <h4 style={{ fontSize: '1.2rem', fontWeight: 600 }}>{req.userName || `User ID: ${req.userId}`}</h4>
-                                <div className="flex-center gap-2 mt-1" style={{ justifyContent: 'flex-start', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                                    <span style={{ opacity: 0.6 }}>Expertise:</span> 
-                                    {req.proposedTopics?.map((s: string) => <span key={s} className="badge badge-info" style={{ fontSize: '0.7rem' }}>{s}</span>)}
-                                </div>
-                            </div>
-                             <a 
-                                href={formatUrl(req.certificateUrl)} 
-                                target="_blank" 
-                                rel="noreferrer" 
-                                className="btn-secondary flex-center gap-2" 
-                                style={{ fontSize: '0.8rem', padding: '0.5rem 1rem' }}
-                             >
-                                {isLocalUpload(req.certificateUrl) ? <FileText size={14} /> : <Globe size={14} />}
-                                <span>Verify Proof</span>
-                             </a>
-                        </div>
-
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px' }}>
-                            {req.proposedBio}
-                        </p>
-
-                        <div className="flex-col gap-2 mt-2">
-                           <textarea 
-                             className="glass-input" 
-                             style={{ minHeight: '60px', padding: '0.8rem', fontSize: '0.9rem' }}
-                             placeholder="Admin feedback..."
-                             value={adminNotes[req.id] || ''}
-                             onChange={(e) => setAdminNotes({ ...adminNotes, [req.id]: e.target.value })}
-                           />
-                        </div>
-
-                        <div className="flex-center gap-4 mt-2" style={{ justifyContent: 'flex-end' }}>
-                           <button 
-                              className="btn-secondary" 
-                              style={{ color: 'var(--error)', borderColor: 'rgba(239, 68, 68, 0.3)' }}
-                              onClick={() => rejectMutation.mutate({ id: req.id, notes: adminNotes[req.id] })}
-                              disabled={rejectMutation.isPending || appMutation.isPending}
-                           >
-                              Decline
-                           </button>
-                           <button 
-                              className="btn-primary" 
-                              onClick={() => appMutation.mutate({ id: req.id, notes: adminNotes[req.id] })}
-                              disabled={appMutation.isPending || rejectMutation.isPending}
-                           >
-                              <Check size={16} /> Promote to Guide
-                           </button>
-                        </div>
-                     </div>
-                   ))}
-                </div>
-             )}
-
              {/* Topic Requests Tab */}
              {activeTab === 'topics' && (
                 <div className="flex-col gap-6">
@@ -392,6 +332,7 @@ export default function AdminDashboard() {
                   
                   {sessLoading ? <div className="flex-center"><Loader2 className="spinner" /></div> :
                    !sessions || sessions.length === 0 ? <p style={{ color: 'var(--text-muted)' }}>No activity found.</p> :
+                   <div style={{ overflowX: 'auto' }}>
                    <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
                      <thead>
                        <tr style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--glass-border)' }}>
@@ -419,18 +360,156 @@ export default function AdminDashboard() {
                        ))}
                      </tbody>
                    </table>
+                   </div>
                   }
                 </div>
              )}
 
-             {/* Users Tab */}
-             {activeTab === 'users' && (
-                <div className="flex-col gap-4">
-                  <h3 className="heading-m flex-between"><span>Verified Users</span> <span className="badge badge-success">{users?.length || 0}</span></h3>
-                  <hr style={{ border: 'none', borderTop: '1px solid var(--glass-border)', margin: '1rem 0' }} />
+              {/* User Onboarding Tab */}
+              {activeTab === 'onboarding' && (
+                <div className="flex-col gap-6 max-w-2xl mx-auto">
+                  <div className="flex-between">
+                    <h3 className="heading-m flex-center gap-3"><UserPlus size={24} color="var(--accent-primary)" /> <span>Onboard New User</span></h3>
+                  </div>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Create a new account for an Admin, Guide, or Student. A temporary password will be emailed to them automatically.</p>
+                  
+                  <form onSubmit={(e) => { e.preventDefault(); onboardMutation.mutate(onboardForm); }} className="glass-panel flex-col gap-5" style={{ padding: '2rem', border: '1px solid var(--glass-border)' }}>
+                    <div className="flex-col gap-2">
+                       <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>User Role</label>
+                       <select 
+                         className="glass-input" 
+                         value={onboardForm.role}
+                         onChange={(e) => setOnboardForm({...onboardForm, role: e.target.value as any})}
+                       >
+                         <option value="STUDENT">Student</option>
+                         <option value="GUIDE">Guide</option>
+                         <option value="ADMIN">Administrator</option>
+                       </select>
+                    </div>
+
+                    <div className="flex-col gap-2">
+                       <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Full Name</label>
+                       <div style={{ position: 'relative' }}>
+                          <Users size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
+                          <input 
+                            type="text" 
+                            className="glass-input" 
+                            placeholder="John Doe" 
+                            style={{ paddingLeft: '2.5rem' }}
+                            value={onboardForm.name}
+                            onChange={(e) => setOnboardForm({...onboardForm, name: e.target.value})}
+                            required
+                          />
+                       </div>
+                    </div>
+
+                    <div className="flex-col gap-2">
+                       <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Registration Number (Unique ID)</label>
+                       <div style={{ position: 'relative' }}>
+                          <Hash size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
+                          <input 
+                            type="text" 
+                            className="glass-input" 
+                            placeholder="ADMIN-001 / GUIDE-2024 / STU-999" 
+                            style={{ paddingLeft: '2.5rem' }}
+                            value={onboardForm.registrationNumber}
+                            onChange={(e) => setOnboardForm({...onboardForm, registrationNumber: e.target.value})}
+                            required
+                          />
+                       </div>
+                    </div>
+
+                    <div className="flex-col gap-2">
+                       <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Gmail Address</label>
+                       <div style={{ position: 'relative' }}>
+                          <MailIcon size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
+                          <input 
+                            type="email" 
+                            className="glass-input" 
+                            placeholder="user@gmail.com" 
+                            style={{ paddingLeft: '2.5rem' }}
+                            value={onboardForm.email}
+                            onChange={(e) => setOnboardForm({...onboardForm, email: e.target.value})}
+                            required
+                          />
+                       </div>
+                    </div>
+
+                    <div className="flex-col gap-2">
+                       <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Phone Number</label>
+                       <div style={{ position: 'relative' }}>
+                          <Phone size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
+                          <input 
+                            type="tel" 
+                            className="glass-input" 
+                            placeholder="+1 234 567 890" 
+                            style={{ paddingLeft: '2.5rem' }}
+                            value={onboardForm.phoneNumber}
+                            onChange={(e) => setOnboardForm({...onboardForm, phoneNumber: e.target.value})}
+                            required
+                          />
+                       </div>
+                    </div>
+
+                    {onboardForm.role === 'STUDENT' && (
+                      <div className="flex-col gap-2 animate-fade-in">
+                         <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--accent-primary)' }}>Assign Guide (Register Number)</label>
+                         <div style={{ position: 'relative' }}>
+                            <BadgeCheck size={16} color="var(--accent-primary)" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
+                            <input 
+                              type="text" 
+                              className="glass-input" 
+                              placeholder="Enter Guide's Registration ID" 
+                              style={{ paddingLeft: '2.5rem', borderColor: 'var(--accent-primary)' }}
+                              value={onboardForm.assignedGuideRegistrationNumber}
+                              onChange={(e) => setOnboardForm({...onboardForm, assignedGuideRegistrationNumber: e.target.value})}
+                              required
+                            />
+                         </div>
+                         <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>This student will only be able to interact with this specific guide.</p>
+                      </div>
+                    )}
+
+                    <button type="submit" className="btn-primary" disabled={onboardMutation.isPending} style={{ marginTop: '1rem', width: '100%' }}>
+                       {onboardMutation.isPending ? <Loader2 className="spinner" /> : 'Confirm & Onboard User'}
+                    </button>
+                  </form>
+                </div>
+              )}
+
+              {/* Users Tab */}
+              {activeTab === 'users' && (
+                <div className="flex-col gap-6">
+                  <div className="flex-between">
+                    <h3 className="heading-m flex-center gap-3" style={{ justifyContent: 'flex-start' }}><Users size={24} color="var(--success)" /> <span>User Management</span></h3>
+                    <div className="flex-center gap-2" style={{ background: 'rgba(255,255,255,0.05)', padding: '0.4rem', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
+                        <Filter size={14} style={{ marginLeft: '0.5rem', opacity: 0.5 }} />
+                        {(['ALL', 'STUDENT', 'GUIDE', 'ADMIN'] as const).map(role => (
+                          <button 
+                            key={role}
+                            onClick={() => setRoleFilter(role)}
+                            style={{ 
+                              padding: '0.4rem 0.8rem', 
+                              fontSize: '0.75rem', 
+                              fontWeight: 600,
+                              borderRadius: '8px',
+                              border: 'none',
+                              background: roleFilter === role ? 'var(--accent-primary)' : 'transparent',
+                              color: roleFilter === role ? 'white' : 'var(--text-muted)',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease'
+                            }}
+                          >
+                            {role}
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                  <hr style={{ border: 'none', borderTop: '1px solid var(--glass-border)', margin: '0' }} />
                   
                   {usersLoading ? <div className="flex-center"><Loader2 className="spinner" /></div> :
                    !users || users.length === 0 ? <p style={{ color: 'var(--text-muted)' }}>No users registered.</p> :
+                   <div style={{ overflowX: 'auto' }}>
                    <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
                      <thead>
                        <tr style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--glass-border)' }}>
@@ -441,25 +520,28 @@ export default function AdminDashboard() {
                        </tr>
                      </thead>
                      <tbody>
-                       {users.map((u: any) => (
-                         <tr key={u.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                           <td style={{ padding: '1rem 0' }}>#{u.id}</td>
-                           <td>{u.name}</td>
-                           <td style={{ color: 'var(--text-muted)' }}>{u.email}</td>
-                           <td><span className="badge" style={{ background: u.role === 'ADMIN' ? 'var(--error)' : u.role === 'GUIDE' ? 'var(--accent-primary)' : 'var(--bg-card)' }}>{u.role}</span></td>
-                         </tr>
-                       ))}
+                       {users
+                        .filter((u: any) => roleFilter === 'ALL' || u.role === roleFilter)
+                        .map((u: any) => (
+                          <tr key={u.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                            <td style={{ padding: '1rem 0' }}>#{u.id}</td>
+                            <td style={{ fontWeight: 500 }}>{u.name}</td>
+                            <td style={{ color: 'var(--text-muted)' }}>{u.email}</td>
+                            <td><span className="badge" style={{ background: u.role === 'ADMIN' ? 'var(--error)' : u.role === 'GUIDE' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)' }}>{u.role}</span></td>
+                          </tr>
+                        ))}
                      </tbody>
                    </table>
+                   </div>
                   }
                 </div>
-             )}
+              )}
 
-          </div>
-       </main>
+           </div>
+      </main>
 
-       {/* Success Overlay */}
-       {showSuccess && (
+      {/* Success Overlay */}
+      {showSuccess && (
         <div className="blur-overlay animate-fade-in" style={{ animationDuration: '0.3s' }}>
           <div className="glass-panel animate-scale-in" style={{ padding: '3rem 5rem', textAlign: 'center', boxShadow: isRejection ? '0 0 50px rgba(239, 68, 68, 0.4)' : '0 0 50px rgba(34, 197, 94, 0.4)', borderColor: isRejection ? 'var(--error)' : 'var(--success)' }}>
             <div className={`flex-center ${isRejection ? 'pulse-error' : 'pulse-success'}`} style={{ width: '80px', height: '80px', background: isRejection ? 'var(--error)' : 'var(--success)', borderRadius: '50%', margin: '0 auto 1.5rem', color: 'white' }}>

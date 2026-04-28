@@ -1,8 +1,6 @@
 package com.example.skillSwap.controller;
 
-import com.example.skillSwap.model.ProjectTopicRequest;
 import com.example.skillSwap.model.User;
-import com.example.skillSwap.service.ProjectTopicRequestService;
 import com.example.skillSwap.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,24 +15,20 @@ import java.util.List;
 @RequiredArgsConstructor
 public class GuideController {
 
-    private final ProjectTopicRequestService projectTopicRequestService;
     private final UserService userService;
 
-    @PostMapping("/request-project")
+    @PostMapping("/add-topic")
     @PreAuthorize("hasRole('GUIDE')")
-    public ResponseEntity<ProjectTopicRequest> requestProject(
-            @RequestParam String topicName,
-            @RequestParam String certificateUrl,
-            Principal principal) {
+    public ResponseEntity<User> addTopic(@RequestParam String topicName, Principal principal) {
         User guide = userService.getUserByEmail(principal.getName());
-        return ResponseEntity.ok(projectTopicRequestService.createTopicRequest(guide, topicName, certificateUrl));
+        return ResponseEntity.ok(userService.addTopic(guide, topicName));
     }
 
-    @GetMapping("/project-requests")
+    @DeleteMapping("/remove-topic")
     @PreAuthorize("hasRole('GUIDE')")
-    public ResponseEntity<List<ProjectTopicRequest>> getMyProjectRequests(Principal principal) {
+    public ResponseEntity<User> removeTopic(@RequestParam String topicName, Principal principal) {
         User guide = userService.getUserByEmail(principal.getName());
-        return ResponseEntity.ok(projectTopicRequestService.getUserRequests(guide.getId()));
+        return ResponseEntity.ok(userService.removeTopic(guide, topicName));
     }
 
     @PutMapping("/profile/bio")

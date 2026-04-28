@@ -1,20 +1,5 @@
 import api from './axiosInstance';
 
-export const getPendingGuideRequests = async () => {
-  const { data } = await api.get('/api/admin/requests/pending');
-  return data.content || data; 
-};
-
-export const approveGuideRequest = async (requestId: number, adminNotes: string) => {
-  const { data } = await api.post(`/api/admin/requests/${requestId}/approve?adminNotes=${encodeURIComponent(adminNotes)}`);
-  return data;
-};
-
-export const rejectGuideRequest = async (requestId: number, adminNotes: string) => {
-  const { data } = await api.post(`/api/admin/requests/${requestId}/reject?adminNotes=${encodeURIComponent(adminNotes)}`);
-  return data;
-};
-
 export const getAllSessions = async (page = 0, size = 10) => {
   const { data } = await api.get(`/api/admin/sessions?page=${page}&size=${size}`);
   return data.content || data;
@@ -49,3 +34,9 @@ export const rejectTopicRequest = async (requestId: number, adminNotes: string) 
   const { data } = await api.post(`/api/admin/topic-requests/${requestId}/reject?adminNotes=${encodeURIComponent(adminNotes)}`);
   return data;
 };
+
+export const onboardUser = async (onboardingData: any) => {
+  const { data } = await api.post('/api/admin/onboard', onboardingData);
+  return data;
+};
+

@@ -15,8 +15,10 @@ interface AuthStore {
   accessToken: string | null;
   refreshToken: string | null;
   user: User | null;
+  mustChangePassword: boolean;
   setTokens: (access: string, refresh: string) => void;
   setUser: (user: User) => void;
+  setMustChangePassword: (val: boolean) => void;
   setAccessToken: (token: string) => void;
   logout: () => void;
 }
@@ -27,17 +29,20 @@ export const useAuthStore = create<AuthStore>()(
       accessToken: null,
       refreshToken: null,
       user: null,
+      mustChangePassword: false,
       setTokens: (access, refresh) => set({ accessToken: access, refreshToken: refresh }),
       setUser: (user) => set({ user: { ...user, role: user.role.replace('ROLE_', '') as any } }),
+      setMustChangePassword: (val) => set({ mustChangePassword: val }),
       setAccessToken: (token) => set({ accessToken: token }),
-      logout: () => set({ accessToken: null, refreshToken: null, user: null }),
+      logout: () => set({ accessToken: null, refreshToken: null, user: null, mustChangePassword: false }),
     }),
     {
       name: 'guide-student-auth',
       partialize: (state) => ({ 
         accessToken: state.accessToken, 
         refreshToken: state.refreshToken, 
-        user: state.user 
+        user: state.user,
+        mustChangePassword: state.mustChangePassword
       }),
     }
   )

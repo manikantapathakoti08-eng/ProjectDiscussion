@@ -17,6 +17,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByEmail(String email);
 
+    Optional<User> findByRegistrationNumber(String registrationNumber);
+
+    boolean existsByRegistrationNumber(String registrationNumber);
+
     // 🚀 Updated: Only find verified GUIDES for a specific topic
     @Query("SELECT DISTINCT u FROM User u JOIN u.topics t " +
            "WHERE u.role = 'GUIDE' AND LOWER(t) LIKE LOWER(CONCAT('%', :topic, '%'))")

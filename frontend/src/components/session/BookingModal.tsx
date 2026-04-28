@@ -14,7 +14,6 @@ interface BookingModalProps {
 export default function BookingModal({ guide, onClose }: BookingModalProps) {
   const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
   const [topicName, setTopicName] = useState(guide?.topics?.[0] || '');
-  const [duration, setDuration] = useState(1);
   const [error, setError] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
@@ -26,7 +25,7 @@ export default function BookingModal({ guide, onClose }: BookingModalProps) {
   });
 
   const bookMutation = useMutation({
-    mutationFn: () => bookSession(selectedSlot!, topicName, duration),
+    mutationFn: () => bookSession(selectedSlot!, topicName),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboardData'] });
       onClose(); 
@@ -42,10 +41,15 @@ export default function BookingModal({ guide, onClose }: BookingModalProps) {
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
       <div className="glass-panel animate-fade-up" style={{ padding: '2rem', width: '100%', maxWidth: '500px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)' }}>
         <div className="flex-between mb-4">
-          <h2 className="heading-m">Book Session with {guide.name}</h2>
+          <h2 className="heading-m">Project Discussion</h2>
           <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}>
             <X size={24} />
           </button>
+        </div>
+
+        <div className="flex-center gap-3 mb-6">
+           <span className="badge badge-accent" style={{ fontSize: '0.75rem' }}>⏱️ 15 Min Session</span>
+           <span className="badge badge-info" style={{ fontSize: '0.75rem' }}>📅 1 Meeting / Day</span>
         </div>
 
         {error && (
@@ -71,8 +75,9 @@ export default function BookingModal({ guide, onClose }: BookingModalProps) {
 
           <div>
             <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Calendar size={16} /> Select Availability
+              <Calendar size={16} /> Select Availability Window
             </label>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>You will be assigned the first available 15-minute slot in the window.</p>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem', maxHeight: '150px', overflowY: 'auto' }}>
               {isLoading ? (
@@ -98,22 +103,9 @@ export default function BookingModal({ guide, onClose }: BookingModalProps) {
                   </label>
                 ))
               ) : (
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No open slots available.</p>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No open availability found.</p>
               )}
             </div>
-          </div>
-
-          <div>
-             <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Clock size={16} /> Duration (Hours)
-            </label>
-            <input 
-              type="number" 
-              min={1} max={5} 
-              className="input-premium mt-2" 
-              value={duration}
-              onChange={(e) => setDuration(Number(e.target.value))}
-            />
           </div>
 
         </div>
@@ -125,7 +117,7 @@ export default function BookingModal({ guide, onClose }: BookingModalProps) {
              disabled={!selectedSlot || bookMutation.isPending}
              onClick={() => bookMutation.mutate()}
            >
-             {bookMutation.isPending ? <Loader2 className="spinner" /> : `Confirm Request`}
+             {bookMutation.isPending ? <Loader2 className="spinner" /> : `Request 15-Min Slot`}
            </button>
         </div>
       </div>

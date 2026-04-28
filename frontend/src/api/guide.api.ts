@@ -43,24 +43,14 @@ export const deleteAvailability = async (slotId: number) => {
   return data;
 };
 
-// --- 🛠️ Topic Approval System ---
+// --- 🛠️ Topic Management ---
 
-export const requestNewTopic = async (topicName: string, certificateUrl: string): Promise<TopicRequestDTO> => {
-  // FIXED: Endpoint is /request-project and param is topicName
-  const { data } = await api.post(`/api/guide/request-project?topicName=${topicName}&certificateUrl=${certificateUrl}`);
+export const addTopic = async (topicName: string) => {
+  const { data } = await api.post(`/api/guide/add-topic?topicName=${topicName}`);
   return data;
 };
 
-export const getMyTopicRequests = async (): Promise<TopicRequestDTO[]> => {
-  const { data } = await api.get('/api/guide/project-requests');
+export const removeTopic = async (topicName: string) => {
+  const { data } = await api.delete(`/api/guide/remove-topic?topicName=${topicName}`);
   return data;
-};
-
-export const uploadCertificate = async (file: File): Promise<string> => {
-  const formData = new FormData();
-  formData.append('file', file);
-  const { data } = await api.post('/api/student/upload', formData, { // Assuming upload is in StudentController or shared
-    headers: { 'Content-Type': 'multipart/form-data' }
-  });
-  return data; 
 };

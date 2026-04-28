@@ -10,7 +10,7 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { setTokens, setUser } = useAuthStore();
+  const { setTokens, setUser, setMustChangePassword } = useAuthStore();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,6 +21,8 @@ export default function Login() {
       const { data } = await api.post('/auth/login', { email, password });
       
       setTokens(data.accessToken, data.refreshToken);
+      setMustChangePassword(data.mustChangePassword);
+      
       setUser({
         id: Date.now(), 
         email: data.email,
@@ -28,6 +30,11 @@ export default function Login() {
         role: data.role
       });
       
+      if (data.mustChangePassword) {
+        navigate('/change-password');
+        return;
+      }
+
       const role = data.role.replace('ROLE_', '');
       if (role === 'ADMIN') {
         navigate('/admin');
@@ -105,7 +112,7 @@ export default function Login() {
         </form>
 
         <p style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
-          Don't have an account? <Link to="/signup" style={{ fontWeight: 600 }}>Create one</Link>
+          Contact your Administrator for account onboarding.
         </p>
       </div>
       

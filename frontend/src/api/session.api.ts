@@ -13,8 +13,8 @@ export const getDashboardData = async (): Promise<UserDashboardDTO> => {
   return data;
 };
 
-export const bookSession = async (availabilityId: number, topicName: string, durationHours: number) => {
-  const { data } = await api.post(`/api/sessions/request/${availabilityId}?topicName=${topicName}&durationHours=${durationHours}`);
+export const bookSession = async (availabilityId: number, topicName: string) => {
+  const { data } = await api.post(`/api/sessions/request/${availabilityId}?topicName=${topicName}`);
   return data;
 };
 

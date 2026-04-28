@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Landing from '../pages/Landing';
 import Login from '../pages/Login';
-import Signup from '../pages/Signup';
+import { ChangePassword } from '../pages/ChangePassword';
 import StudentDashboard from '../pages/StudentDashboard';
 import ExploreGuides from '../pages/ExploreGuides';
 import GuideDashboard from '../pages/GuideDashboard';
@@ -33,7 +33,11 @@ export default function AppRouter() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+        <Route path="/change-password" element={
+          <ProtectedRoute>
+            <ChangePassword />
+          </ProtectedRoute>
+        } />
         <Route path="/guide/dashboard" element={
           <ProtectedRoute>
             <RoleRoute allowedRoles={['GUIDE']}>

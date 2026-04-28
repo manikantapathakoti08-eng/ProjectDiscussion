@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Service
@@ -26,42 +27,80 @@ public class SessionService {
     private final UserRepository userRepository;
     private final AvailabilityRepository availabilityRepository;
     private final NotificationService notificationService;
-    private final GuideRequestRepository guideRequestRepository;
 
     @Transactional
-    public Session createProjectRequest(Long availabilityId, String topicName, int durationHours, User student) {
-        if (durationHours <= 0) throw new ApiException("Duration must be greater than zero");
-
-        Availability slot = availabilityRepository.findById(availabilityId)
-                .orElseThrow(() -> new ApiException("Time slot not found"));
-        
-        if (slot.getStartTime().isBefore(LocalDateTime.now())) {
-            throw new ApiException("Invalid time: This slot has already passed.");
+    public Session createProjectRequest(Long availabilityId, String topicName, User student) {
+        // 1. One meeting per day limit
+        LocalDateTime startOfDay = LocalDateTime.now().with(LocalTime.MIN);
+        LocalDateTime endOfDay = LocalDateTime.now().with(LocalTime.MAX);
+        long sessionsToday = sessionRepository.countStudentSessionsInDay(student, startOfDay, endOfDay);
+        if (sessionsToday >= 1) {
+            throw new ApiException("Daily Limit Reached: Each student can join only one meeting per day to ensure everyone gets a chance.");
         }
+
+        Availability window = availabilityRepository.findById(availabilityId)
+                .orElseThrow(() -> new ApiException("Availability window not found"));
+
+        if (window.getEndTime().isBefore(LocalDateTime.now())) {
+            throw new ApiException("This availability window has already passed.");
+        }
+
+        // 2. Relationship Guard
+        if (student.getRole() == com.example.skillSwap.enums.Role.STUDENT && student.getAssignedGuide() != null) {
+            if (!window.getGuide().getId().equals(student.getAssignedGuide().getId())) {
+                throw new ApiException("You can only book sessions with your assigned Guide: " + student.getAssignedGuide().getName());
+            }
+        }
+
+        // 3. Sequential 15-min Slot Finder
+        List<Session> existingSessions = sessionRepository.findSessionsInWindow(window.getGuide(), window.getStartTime(), window.getEndTime());
         
-        if (slot.isBooked()) throw new ApiException("Slot already taken.");
+        LocalDateTime nextAvailableStart = window.getStartTime();
+        // If window started in the past, start from current time
+        if (nextAvailableStart.isBefore(LocalDateTime.now())) {
+            nextAvailableStart = LocalDateTime.now();
+        }
 
-        // Lock the slot
-        slot.setBooked(true);
-        availabilityRepository.save(slot);
+        for (Session existing : existingSessions) {
+            // If the current gap can fit 15 mins before the next session starts
+            if (nextAvailableStart.plusMinutes(15).isBefore(existing.getStartTime()) || nextAvailableStart.plusMinutes(15).isEqual(existing.getStartTime())) {
+                break;
+            }
+            // Otherwise, jump to the end of this session and check again
+            if (nextAvailableStart.isBefore(existing.getEndTime())) {
+                nextAvailableStart = existing.getEndTime();
+            }
+        }
 
-        Session session = sessionRepository.save(Session.builder()
+        LocalDateTime nextAvailableEnd = nextAvailableStart.plusMinutes(15);
+
+        // Validation: Must fit in window
+        if (nextAvailableEnd.isAfter(window.getEndTime())) {
+            throw new ApiException("No more 15-minute slots available in this window. Remaining time is too short.");
+        }
+
+        // 4. Create the 15-min session
+        Session session = Session.builder()
                 .student(student)
-                .guide(slot.getGuide())
-                .availability(slot)
+                .guide(window.getGuide())
+                .availability(window)
                 .projectTopic(topicName)
-                .durationHours(durationHours)
+                .startTime(nextAvailableStart)
+                .endTime(nextAvailableEnd)
+                .durationMinutes(15)
                 .status(SessionStatus.PENDING)
-                .build());
+                .build();
+
+        Session saved = sessionRepository.save(session);
 
         // 📧 Notification: Student -> Guide
         try {
-            notificationService.sendBookingEmail(session.getGuide().getEmail(), session.getGuide().getName(), student.getName(), topicName);
+            notificationService.sendBookingEmail(saved.getGuide().getEmail(), saved.getGuide().getName(), student.getName(), topicName);
         } catch (Exception e) { 
             System.err.println("Notification skipped: " + e.getMessage()); 
         }
 
-        return session;
+        return saved;
     }
 
     @Transactional
@@ -247,21 +286,6 @@ public class SessionService {
                 .map(SessionMapper::toDTO)
                 .toList();
 
-        // 🛡️ GUIDE APPLICATION STATUS DETECTION
-        com.example.skillSwap.enums.RequestStatus statusChange = null;
-        String statusNotes = null;
-        
-        GuideRequest latestReq = guideRequestRepository.findFirstByUserOrderByCreatedAtDesc(user).orElse(null);
-        if (latestReq != null && latestReq.getStatus() != com.example.skillSwap.enums.RequestStatus.PENDING) {
-            if (user.getLastSeenGuideRequestStatus() != latestReq.getStatus()) {
-                statusChange = latestReq.getStatus();
-                statusNotes = latestReq.getAdminNotes();
-                
-                user.setLastSeenGuideRequestStatus(latestReq.getStatus());
-                userRepository.save(user); 
-            }
-        }
-
-        return new UserDashboardDTO(reqs, ments, hist, statusChange, statusNotes);
+        return new UserDashboardDTO(reqs, ments, hist, null, null);
     }
 }

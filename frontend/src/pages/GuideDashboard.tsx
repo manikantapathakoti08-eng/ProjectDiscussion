@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getPendingRequests, acceptSession, rejectSession, setAvailability, getGuideAvailability, deleteAvailability, requestNewTopic, getMyTopicRequests, uploadCertificate } from '../api/guide.api';
+import { getPendingRequests, acceptSession, rejectSession, setAvailability, getGuideAvailability, deleteAvailability, addTopic, removeTopic } from '../api/guide.api';
 import { getDashboardData } from '../api/session.api';
-import { LogOut, Home, Calendar, Activity, BookOpen, Loader2, Check, X, Clock, User as UserIcon, Plus, FileText, Upload, Sparkles } from 'lucide-react';
+import { LogOut, Home, Calendar, Activity, BookOpen, Loader2, Check, X, Clock, User as UserIcon, Plus, Sparkles, Trash2 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { format } from 'date-fns';
-import { useRef } from 'react';
 import axios from 'axios';
 
 export default function GuideDashboard() {
@@ -16,10 +15,6 @@ export default function GuideDashboard() {
 
   const [showTopicModal, setShowTopicModal] = useState(false);
   const [newTopicName, setNewTopicName] = useState('');
-  const [certUrl, setCertUrl] = useState('');
-  const [isDragging, setIsDragging] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [dateStr, setDateStr] = useState('');
   const [startTimeStr, setStartTimeStr] = useState('');
@@ -150,61 +145,33 @@ export default function GuideDashboard() {
   };
 
 
-  const topicRequestMutation = useMutation({
-    mutationFn: (payload: { name: string, url: string }) => requestNewTopic(payload.name, payload.url),
+  const addTopicMutation = useMutation({
+    mutationFn: (name: string) => addTopic(name),
     onSuccess: () => {
       setShowTopicModal(false);
-      setNewTopicName(''); setCertUrl('');
-      setSuccessMsg('Topic request sent for verification.');
+      setNewTopicName('');
+      setSuccessMsg('Topic added to your profile!');
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
-      queryClient.invalidateQueries({ queryKey: ['myTopicRequests'] });
+      queryClient.invalidateQueries({ queryKey: ['user'] }); // Refresh user topics
     }
   });
 
-  const { data: myTopicRequests } = useQuery({
-    queryKey: ['myTopicRequests'],
-    queryFn: getMyTopicRequests
-  });
-
-
-  const handleRequestTopic = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTopicName || !certUrl) return;
-    topicRequestMutation.mutate({ name: newTopicName, url: certUrl });
-  };
-
-  const handleFileUpload = async (file: File) => {
-    if (!file) return;
-    setIsUploading(true);
-    try {
-      const url = await uploadCertificate(file);
-      setCertUrl(url);
-      setSuccessMsg('Proof document uploaded!');
+  const removeTopicMutation = useMutation({
+    mutationFn: (name: string) => removeTopic(name),
+    onSuccess: () => {
+      setSuccessMsg('Topic removed.');
       setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 2000);
-    } catch (error) {
-      console.error('Upload failed', error);
-      alert('Failed to upload. Try a link instead.');
-    } finally {
-      setIsUploading(false);
+      setTimeout(() => setShowSuccess(false), 3000);
+      queryClient.invalidateQueries({ queryKey: ['user'] });
     }
-  };
+  });
 
-  const onDragOver = (e: React.DragEvent) => {
-     e.preventDefault();
-     setIsDragging(true);
-  };
 
-  const onDragLeave = () => {
-     setIsDragging(false);
-  };
-
-  const onDrop = (e: React.DragEvent) => {
-     e.preventDefault();
-     setIsDragging(false);
-     const file = e.dataTransfer.files?.[0];
-     if (file) handleFileUpload(file);
+  const handleAddTopic = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTopicName) return;
+    addTopicMutation.mutate(newTopicName);
   };
 
   const handleAddSlot = (e: React.FormEvent) => {
@@ -241,27 +208,29 @@ export default function GuideDashboard() {
         <div className="flex-col gap-4">
            <div className="flex-between">
               <h3 style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>My Topics</h3>
-              <button className="btn-primary" style={{ padding: '4px 8px', borderRadius: '6px' }} title="Request New Topic" onClick={() => setShowTopicModal(true)}>
+              <button className="btn-primary" style={{ padding: '4px 8px', borderRadius: '6px' }} title="Add Topic" onClick={() => setShowTopicModal(true)}>
                  <Plus size={14} />
               </button>
            </div>
            
-           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-              {user?.topics?.map((topic: string) => (
-                 <span key={topic} className="badge badge-accent" style={{ fontSize: '0.75rem', padding: '0.3rem 0.6rem' }}>{topic}</span>
-              ))}
+           <div className="flex-col gap-2">
+              {user?.topics?.length === 0 ? (
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>No topics added.</p>
+              ) : (
+                user?.topics?.map((topic: string) => (
+                   <div key={topic} className="flex-between" style={{ background: 'rgba(255,255,255,0.03)', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.85rem' }}>
+                      <span style={{ fontWeight: 500 }}>{topic}</span>
+                      <button 
+                        onClick={() => removeTopicMutation.mutate(topic)}
+                        style={{ background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer', opacity: 0.6 }}
+                        title="Remove Topic"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                   </div>
+                ))
+              )}
            </div>
-
-           {myTopicRequests && myTopicRequests.filter((r: any) => r.status === 'PENDING').length > 0 && (
-              <div className="flex-col gap-2 mt-2">
-                 <p style={{ fontSize: '0.7rem', color: 'var(--warning)', fontWeight: 600 }}>Awaiting Approval:</p>
-                 {myTopicRequests.filter((r: any) => r.status === 'PENDING').map((req: any) => (
-                    <div key={req.id} style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', padding: '0.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                       {req.topicName}
-                    </div>
-                 ))}
-              </div>
-           )}
         </div>
 
         <div style={{ marginTop: 'auto' }}>
@@ -301,15 +270,15 @@ export default function GuideDashboard() {
                  <div className="flex-center p-4"><Loader2 className="spinner" size={30} /></div>
               ) : !requests || requests.length === 0 ? (
                 <div className="flex-col flex-center" style={{ flex: 1, color: 'var(--text-muted)' }}>
-                  <Activity size={48} opacity={0.2} style={{ marginBottom: '1rem' }} />
-                  <p>No new student requests at the moment.</p>
+                   <Activity size={48} opacity={0.2} style={{ marginBottom: '1rem' }} />
+                   <p>No new student requests at the moment.</p>
                 </div>
               ) : (
                 <div className="flex-col gap-4 mt-4">
                   {requests.map((req: any) => (
                     <div key={req.id} style={{ background: 'rgba(255,255,255,0.02)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
                       <div className="flex-between" style={{ marginBottom: '0.5rem' }}>
-                        <span style={{ fontWeight: 600, fontSize: '1.1rem' }}>{req.topicName} • <span style={{ color: 'var(--accent-primary)' }}>{req.durationHours}h</span></span>
+                        <span style={{ fontWeight: 600, fontSize: '1.1rem' }}>{req.topicName}</span>
                         <span className="badge badge-warning">NEW REQUEST</span>
                       </div>
                       <p style={{ color: 'var(--text-secondary)' }}>Student: {req.studentName || `ID: ${req.studentId}`}</p>
@@ -355,8 +324,8 @@ export default function GuideDashboard() {
                 </div>
               ) : (
                 <div className="flex-col gap-4 mt-4">
-                   {dashboardData.myGuidanceSessions.map((sess: any) => (
-                     <div key={sess.id} className="glass-card" style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px' }}>
+                  {dashboardData.myGuidanceSessions.map((sess: any) => (
+                    <div key={sess.id} className="glass-card" style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px' }}>
                         <div className="flex-between">
                            <span style={{ fontWeight: 600 }}>{sess.topicName}</span>
                            <div className="flex-col items-end">
@@ -369,26 +338,30 @@ export default function GuideDashboard() {
                            </div>
                         </div>
                         <div className="flex-col gap-1 mt-2">
-                           <p style={{ fontSize: '0.9rem', color: sess.status === 'COMPLETED' ? 'var(--success)' : 'var(--text-secondary)' }}>Student: <strong>{sess.studentName || 'Learner'}</strong></p>
-                           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Scheduled for: {formatDate(sess.startTime)}</p>
+                           <p style={{ fontSize: '0.9rem', color: sess.status === 'COMPLETED' ? 'var(--success)' : 'var(--text-secondary)' }}>Student: <strong>{sess.studentName || 'Student'}</strong></p>
+                           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                              <Clock size={12} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
+                              {format(new Date(sess.startTime), 'h:mm a')} - {format(new Date(sess.endTime), 'h:mm a')}
+                           </p>
+                           <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{format(new Date(sess.startTime), 'MMM d, yyyy')}</p>
                         </div>
                         
                         <div className="flex-col gap-2 mt-4">
                             {sess.status === 'ACCEPTED' && sess.meetingLink && (() => {
                                const start = new Date(sess.startTime).getTime();
-                               const end = start + (sess.durationHours * 60 * 60 * 1000);
+                               const end = new Date(sess.endTime).getTime();
                                const nowTime = now.getTime();
                                const fiveMinsMillis = 5 * 60 * 1000;
                                
                                if (nowTime < (start - fiveMinsMillis)) {
-                                 const timeStr = format(new Date(sess.startTime), 'MMM d, h:mm a');
+                                 const timeStr = format(new Date(sess.startTime), 'h:mm a');
                                  return (
                                    <div className="upcoming-badge" style={{ justifyContent: 'center' }}>
-                                     <Clock size={14} /> Starts at {timeStr}
+                                     <Clock size={14} /> Room opens at {timeStr}
                                    </div>
                                  );
                                }
-
+ 
                                if (nowTime > end) {
                                  return (
                                    <div className="upcoming-badge" style={{ justifyContent: 'center', opacity: 0.5 }}>
@@ -396,7 +369,7 @@ export default function GuideDashboard() {
                                    </div>
                                  );
                                }
-
+ 
                                return (
                                  <a 
                                    href={sess.meetingLink} 
@@ -405,7 +378,7 @@ export default function GuideDashboard() {
                                    className="btn-join-premium" 
                                    onClick={() => joinMutation.mutate(sess.id)}
                                  >
-                                   <Sparkles size={16} /> Enter Meeting Room
+                                   <Sparkles size={16} /> Enter 15-Min Meeting
                                  </a>
                                );
                             })()}
@@ -438,8 +411,8 @@ export default function GuideDashboard() {
                               )}
                            </div>
                         </div>
-                     </div>
-                   ))}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -522,76 +495,32 @@ export default function GuideDashboard() {
         </div>
       )}
 
-      {/* Request Topic Modal */}
+      {/* Add Topic Modal */}
       {showTopicModal && (
         <div className="blur-overlay" style={{ background: 'rgba(2, 6, 23, 0.9)', zIndex: 1200 }}>
-          <div className="glass-panel animate-scale-in" style={{ width: '100%', maxWidth: '500px', padding: '2.5rem' }}>
+          <div className="glass-panel animate-scale-in" style={{ width: '100%', maxWidth: '400px', padding: '2.5rem' }}>
             <div className="flex-between" style={{ marginBottom: '2rem' }}>
-              <h2 className="heading-m flex-center gap-2"><Plus size={24} color="var(--accent-primary)" /> Request New Topic</h2>
+              <h2 className="heading-m flex-center gap-2"><Plus size={24} color="var(--accent-primary)" /> Add Topic</h2>
               <button onClick={() => setShowTopicModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
                 <X size={24} />
               </button>
             </div>
 
-            <form onSubmit={handleRequestTopic} className="flex-col gap-6">
+            <form onSubmit={handleAddTopic} className="flex-col gap-6">
               <div className="flex-col gap-2">
                 <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Topic Name</label>
                 <input 
                   type="text" 
                   className="input-premium" 
-                  placeholder="e.g. Advanced React, Microservices..."
+                  placeholder="e.g. Java, React, Python..."
                   required
                   value={newTopicName}
                   onChange={e => setNewTopicName(e.target.value)}
                 />
               </div>
 
-              <div className="flex-col gap-2">
-                <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Expertise Proof</label>
-                
-                <div 
-                  className={`dropzone ${isDragging ? 'dragging' : ''}`}
-                  onDragOver={onDragOver}
-                  onDragLeave={onDragLeave}
-                  onDrop={onDrop}
-                  onClick={() => fileInputRef.current?.click()}
-                  style={{ border: '2px dashed var(--glass-border)', borderRadius: '12px', padding: '2rem', textAlign: 'center', cursor: 'pointer', transition: 'all 0.3s ease', background: isDragging ? 'rgba(99, 102, 241, 0.1)' : 'rgba(255,255,255,0.02)', borderColor: isDragging ? 'var(--accent-primary)' : 'var(--glass-border)', position: 'relative' }}
-                >
-                  <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])} accept=".pdf,.png,.jpg,.jpeg"/>
-                  {isUploading ? (
-                    <div className="flex-col flex-center gap-2">
-                      <Loader2 className="spinner" size={24} />
-                      <p style={{ fontSize: '0.85rem' }}>Uploading Proof...</p>
-                    </div>
-                  ) : certUrl && certUrl.startsWith('/uploads/') ? (
-                     <div className="flex-col flex-center gap-2">
-                        <Check size={24} color="var(--success)" />
-                        <p style={{ fontSize: '0.85rem', color: 'var(--success)' }}>Document Uploaded!</p>
-                        <button type="button" onClick={(e) => { e.stopPropagation(); setCertUrl(''); }} style={{ fontSize: '0.75rem', background: 'none', border: 'none', color: 'var(--error)', textDecoration: 'underline' }}>Reset</button>
-                     </div>
-                  ) : (
-                    <div className="flex-col flex-center gap-2">
-                      <Upload size={32} style={{ opacity: 0.5, marginBottom: '0.5rem' }} />
-                      <p style={{ fontSize: '0.9rem', fontWeight: 500 }}>Click or drag certification</p>
-                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>PDF, PNG, JPG</p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex-center gap-4" style={{ margin: '0.5rem 0' }}>
-                  <hr style={{ flex: 1, opacity: 0.1 }} />
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'bold' }}>OR LINK</span>
-                  <hr style={{ flex: 1, opacity: 0.1 }} />
-                </div>
-
-                <div style={{ position: 'relative' }}>
-                  <FileText size={18} style={{ position: 'absolute', left: '1rem', top: '1rem', opacity: 0.5 }} />
-                  <input type="url" className="input-premium" style={{ paddingLeft: '3rem' }} placeholder="Link to expertise proof..." value={certUrl.startsWith('/uploads/') ? '' : certUrl} onChange={e => setCertUrl(e.target.value)} disabled={isUploading} />
-                </div>
-              </div>
-
-              <button type="submit" className="btn-primary" disabled={topicRequestMutation.isPending} style={{ marginTop: '1rem' }}>
-                {topicRequestMutation.isPending ? <Loader2 className="spinner" /> : 'Request Topic Approval'}
+              <button type="submit" className="btn-primary" disabled={addTopicMutation.isPending} style={{ marginTop: '1rem' }}>
+                {addTopicMutation.isPending ? <Loader2 className="spinner" /> : 'Add to Profile'}
               </button>
             </form>
           </div>

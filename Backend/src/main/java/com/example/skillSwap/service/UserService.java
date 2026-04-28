@@ -189,4 +189,21 @@ public class UserService {
         
         availabilityRepository.delete(slot);
     }
+
+    public User addTopic(User user, String topic) {
+        if (user.getTopics() == null) {
+            user.setTopics(new ArrayList<>());
+        }
+        if (!user.getTopics().contains(topic)) {
+            user.getTopics().add(topic);
+        }
+        return userRepository.save(user);
+    }
+
+    public User removeTopic(User user, String topic) {
+        if (user.getTopics() != null) {
+            user.getTopics().remove(topic);
+        }
+        return userRepository.save(user);
+    }
 }

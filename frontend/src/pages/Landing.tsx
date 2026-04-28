@@ -10,11 +10,11 @@ export default function Landing() {
           <div style={{ background: 'var(--accent-primary)', padding: '0.5rem', borderRadius: '12px' }}>
             <Sparkles size={24} color="white" />
           </div>
-          <span className="heading-m text-gradient">Guide & Student App</span>
+          <span className="heading-m text-gradient">projectMeeting</span>
         </div>
         <div className="flex-center gap-4">
           <Link to="/login" className="btn-secondary">Sign In</Link>
-          <Link to="/signup" className="btn-primary">Get Started</Link>
+          <Link to="/login" className="btn-primary">Join Now</Link>
         </div>
       </nav>
 
@@ -32,8 +32,8 @@ export default function Landing() {
         </p>
 
         <div className="flex-center gap-4 delay-200" style={{ marginTop: '1rem' }}>
-          <Link to="/signup" className="btn-primary" style={{ padding: '1rem 2rem', fontSize: '1.1rem' }}>
-            <span>Join for Free</span>
+          <Link to="/login" className="btn-primary" style={{ padding: '1rem 2rem', fontSize: '1.1rem' }}>
+            <span>Sign In to Start</span>
             <ArrowRight size={20} />
           </Link>
           <Link to="/guides" className="btn-secondary" style={{ padding: '1rem 2rem', fontSize: '1.1rem' }}>

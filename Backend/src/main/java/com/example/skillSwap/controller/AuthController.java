@@ -37,32 +37,13 @@ public class AuthController {
     private final RedisOtpService redisOtpService;
     private final NotificationService notificationService;
 
-    // ---------------- SIGNUP ----------------
+    // ---------------- SIGNUP (DISABLED) ----------------
     @PostMapping("/signup")
     @Transactional
     public ResponseEntity<String> signup(
             @Valid @RequestBody SignupRequest signupRequest
     ) {
-
-        if (userRepository.existsByEmail(signupRequest.getEmail())) {
-            throw new ApiException("Email already exists");
-        }
-
-        User user = User.builder()
-                .name(signupRequest.getName())
-                .email(signupRequest.getEmail())
-                .password(passwordEncoder.encode(signupRequest.getPassword()))
-                .role(Role.STUDENT)
-                .build();
-
-        userRepository.save(user);
-
-        // Log signup activity
-        adminActivityRepository.save(
-                new AdminActivityLog(ActivityType.SIGNUP, user)
-        );
-
-        return ResponseEntity.ok("User registered successfully");
+        throw new ApiException("Public registration is disabled. Please contact an Administrator.");
     }
 
     // ---------------- LOGIN ----------------
@@ -90,12 +71,13 @@ public class AuthController {
                 new AdminActivityLog(ActivityType.LOGIN, user)
         );
 
-        // 🚀 UPDATE: Return tokens to the frontend
+        // 🚀 UPDATE: Return tokens and mustChangePassword flag
         return ResponseEntity.ok(Map.of(
                 "accessToken", accessToken,
                 "refreshToken", refreshToken,
                 "email", user.getEmail(),
-                "role", user.getRole().name()
+                "role", user.getRole().name(),
+                "mustChangePassword", user.isMustChangePassword()
         ));
     }
 
@@ -177,4 +159,29 @@ public class AuthController {
 
         return ResponseEntity.ok("Password has been reset successfully. You can now login.");
     }
-}
+
+    @PostMapping("/change-password")
+    @Transactional
+    public ResponseEntity<?> changePassword(
+            @RequestBody Map<String, String> request,
+            Authentication authentication
+    ) {
+        String oldPassword = request.get("oldPassword");
+        String newPassword = request.get("newPassword");
+
+        if (authentication == null) throw new ApiException("Unauthorized");
+        
+        User user = userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new ApiException("User not found"));
+
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new ApiException("Old password does not match");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setMustChangePassword(false);
+        userRepository.save(user);
+
+        return ResponseEntity.ok("Password updated successfully");
+    }
+}

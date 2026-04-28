@@ -6,11 +6,12 @@ import java.time.LocalDateTime;
 public record SessionResponseDTO(
         Long id,
         String topicName,
-        int durationHours,
+        int durationMinutes,
         SessionStatus status,
         String studentName,
         String guideName,
         LocalDateTime startTime,
+        LocalDateTime endTime,
         LocalDateTime guideJoinedAt,
         LocalDateTime studentJoinedAt,
         LocalDateTime guideLastHeartbeatAt,

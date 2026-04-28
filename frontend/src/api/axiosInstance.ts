@@ -3,7 +3,7 @@ import { useAuthStore } from '../store/authStore';
 
 const api = axios.create({
   // Since we set up a Vite proxy, we can just use relative paths
-  baseURL: '',
+  baseURL: import.meta.env.VITE_API_BASE_URL || '',
   headers: {
     'Content-Type': 'application/json',
   },

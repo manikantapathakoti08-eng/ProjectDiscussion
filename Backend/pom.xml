@@ -14,10 +14,10 @@
     </parent>
 
     <groupId>com.example</groupId>
-    <artifactId>skillSwap</artifactId>
+    <artifactId>projectMeeting</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>skillSwap</name>
-    <description>SkillSwap using Spring Boot</description>
+    <name>projectMeeting</name>
+    <description>projectMeeting using Spring Boot</description>
 
     <properties>
         <java.version>21</java.version>
@@ -112,6 +112,12 @@
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>me.paulschwarz</groupId>
+            <artifactId>spring-dotenv</artifactId>
+            <version>4.0.0</version>
         </dependency>
     </dependencies>
 
