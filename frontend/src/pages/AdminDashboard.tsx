@@ -15,12 +15,12 @@ export default function AdminDashboard() {
   const [roleFilter, setRoleFilter] = useState<'ALL' | 'STUDENT' | 'GUIDE' | 'ADMIN'>('ALL');
   
   // Onboarding Form State
+  const [onboardingRole, setOnboardingRole] = useState<'STUDENT' | 'GUIDE' | 'ADMIN'>('STUDENT');
   const [onboardForm, setOnboardForm] = useState({
     name: '',
     email: '',
     registrationNumber: '',
     phoneNumber: '',
-    role: 'STUDENT' as 'STUDENT' | 'GUIDE' | 'ADMIN',
     assignedGuideRegistrationNumber: ''
   });
 
@@ -109,7 +109,6 @@ export default function AdminDashboard() {
         email: '',
         registrationNumber: '',
         phoneNumber: '',
-        role: 'STUDENT',
         assignedGuideRegistrationNumber: ''
       });
       setTimeout(() => setShowSuccess(false), 3000);
@@ -337,109 +336,125 @@ export default function AdminDashboard() {
                   <div className="flex-between">
                     <h3 className="heading-m flex-center gap-3"><UserPlus size={24} color="var(--accent-primary)" /> <span>Onboard New User</span></h3>
                   </div>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Create a new account for an Admin, Guide, or Student. A temporary password will be emailed to them automatically.</p>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Create a new account for an Admin, Faculty, or Student. A temporary password will be emailed to them automatically.</p>
                   
-                  <form onSubmit={(e) => { e.preventDefault(); onboardMutation.mutate(onboardForm); }} className="glass-panel flex-col gap-5" style={{ padding: '2rem', border: '1px solid var(--glass-border)' }}>
-                    <div className="flex-col gap-2">
-                       <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>User Role</label>
-                       <select 
-                         className="glass-input" 
-                         value={onboardForm.role}
-                         onChange={(e) => setOnboardForm({...onboardForm, role: e.target.value as any})}
-                       >
-                         <option value="STUDENT">Student</option>
-                         <option value="GUIDE">Guide</option>
-                         <option value="ADMIN">Administrator</option>
-                       </select>
-                    </div>
+                  <div className="glass-panel flex-col gap-5 animate-fade-in" style={{ padding: '2rem', border: '1px solid var(--glass-border)' }}>
+                     
+                     {/* Role Selection Tabs */}
+                     <div className="flex-center gap-4" style={{ background: 'rgba(255,255,255,0.03)', padding: '0.5rem', borderRadius: '16px', marginBottom: '1rem', border: '1px solid var(--glass-border)' }}>
+                       {(['STUDENT', 'GUIDE', 'ADMIN'] as const).map(role => (
+                         <button
+                           key={role}
+                           type="button"
+                           onClick={() => setOnboardingRole(role)}
+                           style={{
+                             flex: 1,
+                             padding: '0.8rem',
+                             borderRadius: '12px',
+                             border: 'none',
+                             background: onboardingRole === role ? 'var(--accent-primary)' : 'transparent',
+                             color: onboardingRole === role ? 'white' : 'var(--text-muted)',
+                             fontWeight: 600,
+                             cursor: 'pointer',
+                             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                             transform: onboardingRole === role ? 'scale(1.02)' : 'scale(1)',
+                             boxShadow: onboardingRole === role ? '0 4px 15px rgba(99, 102, 241, 0.3)' : 'none'
+                           }}
+                         >
+                           {role === 'GUIDE' ? 'Faculty (Guide)' : role === 'ADMIN' ? 'Administrator' : 'Student'}
+                         </button>
+                       ))}
+                     </div>
 
-                    <div className="flex-col gap-2">
-                       <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Full Name</label>
-                       <div style={{ position: 'relative' }}>
-                          <Users size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
-                          <input 
-                            type="text" 
-                            className="glass-input" 
-                            placeholder="John Doe" 
-                            style={{ paddingLeft: '2.5rem' }}
-                            value={onboardForm.name}
-                            onChange={(e) => setOnboardForm({...onboardForm, name: e.target.value})}
-                            required
-                          />
-                       </div>
-                    </div>
+                     <form key={onboardingRole} onSubmit={(e) => { e.preventDefault(); onboardMutation.mutate({ ...onboardForm, role: onboardingRole }); }} className="flex-col gap-5 animate-fade-up">
+                        <div className="flex-col gap-2">
+                           <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Full Name</label>
+                           <div style={{ position: 'relative' }}>
+                              <Users size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
+                              <input 
+                                type="text" 
+                                className="input-premium" 
+                                placeholder={onboardingRole === 'ADMIN' ? "Admin Name" : onboardingRole === 'GUIDE' ? "Prof. John Doe" : "John Doe"} 
+                                style={{ paddingLeft: '2.5rem' }}
+                                value={onboardForm.name}
+                                onChange={(e) => setOnboardForm({...onboardForm, name: e.target.value})}
+                                required
+                              />
+                           </div>
+                        </div>
 
-                    <div className="flex-col gap-2">
-                       <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Registration Number (Unique ID)</label>
-                       <div style={{ position: 'relative' }}>
-                          <Hash size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
-                          <input 
-                            type="text" 
-                            className="glass-input" 
-                            placeholder="ADMIN-001 / GUIDE-2024 / STU-999" 
-                            style={{ paddingLeft: '2.5rem' }}
-                            value={onboardForm.registrationNumber}
-                            onChange={(e) => setOnboardForm({...onboardForm, registrationNumber: e.target.value})}
-                            required
-                          />
-                       </div>
-                    </div>
+                        <div className="flex-col gap-2">
+                           <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Registration Number (Unique ID)</label>
+                           <div style={{ position: 'relative' }}>
+                              <Hash size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
+                              <input 
+                                type="text" 
+                                className="input-premium" 
+                                placeholder={onboardingRole === 'ADMIN' ? "ADMIN-001" : onboardingRole === 'GUIDE' ? "FACULTY-2024" : "STU-999"} 
+                                style={{ paddingLeft: '2.5rem' }}
+                                value={onboardForm.registrationNumber}
+                                onChange={(e) => setOnboardForm({...onboardForm, registrationNumber: e.target.value})}
+                                required
+                              />
+                           </div>
+                        </div>
 
-                    <div className="flex-col gap-2">
-                       <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Gmail Address</label>
-                       <div style={{ position: 'relative' }}>
-                          <MailIcon size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
-                          <input 
-                            type="email" 
-                            className="glass-input" 
-                            placeholder="user@gmail.com" 
-                            style={{ paddingLeft: '2.5rem' }}
-                            value={onboardForm.email}
-                            onChange={(e) => setOnboardForm({...onboardForm, email: e.target.value})}
-                            required
-                          />
-                       </div>
-                    </div>
+                        <div className="flex-col gap-2">
+                           <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Gmail Address</label>
+                           <div style={{ position: 'relative' }}>
+                              <MailIcon size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
+                              <input 
+                                type="email" 
+                                className="input-premium" 
+                                placeholder="user@gmail.com" 
+                                style={{ paddingLeft: '2.5rem' }}
+                                value={onboardForm.email}
+                                onChange={(e) => setOnboardForm({...onboardForm, email: e.target.value})}
+                                required
+                              />
+                           </div>
+                        </div>
 
-                    <div className="flex-col gap-2">
-                       <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Phone Number</label>
-                       <div style={{ position: 'relative' }}>
-                          <Phone size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
-                          <input 
-                            type="tel" 
-                            className="glass-input" 
-                            placeholder="+1 234 567 890" 
-                            style={{ paddingLeft: '2.5rem' }}
-                            value={onboardForm.phoneNumber}
-                            onChange={(e) => setOnboardForm({...onboardForm, phoneNumber: e.target.value})}
-                            required
-                          />
-                       </div>
-                    </div>
+                        <div className="flex-col gap-2">
+                           <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Phone Number</label>
+                           <div style={{ position: 'relative' }}>
+                              <Phone size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
+                              <input 
+                                type="tel" 
+                                className="input-premium" 
+                                placeholder="+1 234 567 890" 
+                                style={{ paddingLeft: '2.5rem' }}
+                                value={onboardForm.phoneNumber}
+                                onChange={(e) => setOnboardForm({...onboardForm, phoneNumber: e.target.value})}
+                                required
+                              />
+                           </div>
+                        </div>
 
-                    {onboardForm.role === 'STUDENT' && (
-                      <div className="flex-col gap-2 animate-fade-in">
-                         <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--accent-primary)' }}>Assign Guide (Register Number)</label>
-                         <div style={{ position: 'relative' }}>
-                            <BadgeCheck size={16} color="var(--accent-primary)" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
-                            <input 
-                              type="text" 
-                              className="glass-input" 
-                              placeholder="Enter Guide's Registration ID" 
-                              style={{ paddingLeft: '2.5rem', borderColor: 'var(--accent-primary)' }}
-                              value={onboardForm.assignedGuideRegistrationNumber}
-                              onChange={(e) => setOnboardForm({...onboardForm, assignedGuideRegistrationNumber: e.target.value})}
-                              required
-                            />
-                         </div>
-                         <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>This student will only be able to interact with this specific guide.</p>
-                      </div>
-                    )}
+                        {onboardingRole === 'STUDENT' && (
+                          <div className="flex-col gap-2 animate-fade-in">
+                             <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--accent-primary)' }}>Assign Faculty Guide (Register Number)</label>
+                             <div style={{ position: 'relative' }}>
+                                <BadgeCheck size={16} color="var(--accent-primary)" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
+                                <input 
+                                  type="text" 
+                                  className="input-premium" 
+                                  placeholder="Enter Faculty's Registration ID" 
+                                  style={{ paddingLeft: '2.5rem', borderColor: 'var(--accent-primary)' }}
+                                  value={onboardForm.assignedGuideRegistrationNumber}
+                                  onChange={(e) => setOnboardForm({...onboardForm, assignedGuideRegistrationNumber: e.target.value})}
+                                  required
+                                />
+                             </div>
+                             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>This student will only be able to interact with this specific faculty member.</p>
+                          </div>
+                        )}
 
-                    <button type="submit" className="btn-primary" disabled={onboardMutation.isPending} style={{ marginTop: '1rem', width: '100%' }}>
-                       {onboardMutation.isPending ? <Loader2 className="spinner" /> : 'Confirm & Onboard User'}
-                    </button>
-                  </form>
+                        <button type="submit" className="btn-primary" disabled={onboardMutation.isPending} style={{ marginTop: '1rem', width: '100%' }}>
+                           {onboardMutation.isPending ? <Loader2 className="spinner" /> : `Confirm & Onboard ${onboardingRole === 'GUIDE' ? 'Faculty' : onboardingRole === 'ADMIN' ? 'Administrator' : 'Student'}`}
+                        </button>
+                     </form>
+                  </div>
                 </div>
               )}
 
