@@ -66,5 +66,17 @@ jobs:
             # Start the newest uploaded application
             cd /home/azureuser/app
             NEWEST_JAR=$(ls -t *.jar | head -n 1)
-            nohup java -jar $NEWEST_JAR > app.log 2>&1 < /dev/null &
+            
+            if [ -z "$NEWEST_JAR" ]; then
+              echo "ERROR: No JAR file found in /home/azureuser/app"
+              exit 1
+            fi
+            
+            echo "Starting application: $NEWEST_JAR"
+            nohup java -jar "$NEWEST_JAR" > app.log 2>&1 </dev/null &
+            
+            # Wait a moment to ensure it doesn't crash immediately
+            sleep 3
+            echo "Deployment script finished."
+
 
