@@ -19,6 +19,7 @@ public class ProjectTopicRequestService {
 
     private final ProjectTopicRequestRepository projectTopicRequestRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     @Transactional
     public ProjectTopicRequest createTopicRequest(User user, String topicName, String certificateUrl) {
@@ -60,6 +61,13 @@ public class ProjectTopicRequestService {
         }
 
         projectTopicRequestRepository.save(request);
+
+        // 🚀 WebSocket Live Notification
+        notificationService.sendLiveNotification(
+            user.getEmail(), 
+            "Congratulations! Your topic request for '" + request.getTopicName() + "' has been APPROVED.", 
+            "SUCCESS"
+        );
     }
 
     @Transactional
@@ -74,5 +82,12 @@ public class ProjectTopicRequestService {
         request.setStatus(RequestStatus.REJECTED);
         request.setAdminNotes(adminNotes);
         projectTopicRequestRepository.save(request);
+
+        // 🚀 WebSocket Live Notification
+        notificationService.sendLiveNotification(
+            request.getUser().getEmail(), 
+            "Notice: Your topic request for '" + request.getTopicName() + "' has been rejected. Reason: " + adminNotes, 
+            "ERROR"
+        );
     }
 }

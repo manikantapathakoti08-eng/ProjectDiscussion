@@ -1,10 +1,15 @@
 import AppRouter from './router/AppRouter';
+import { WebSocketProvider } from './context/WebSocketContext';
+import { LiveNotificationContainer } from './components/LiveNotification';
 
 function App() {
   return (
-    <div className="app-container">
-      <AppRouter />
-    </div>
+    <WebSocketProvider>
+      <div className="app-container">
+        <LiveNotificationContainer />
+        <AppRouter />
+      </div>
+    </WebSocketProvider>
   );
 }
 

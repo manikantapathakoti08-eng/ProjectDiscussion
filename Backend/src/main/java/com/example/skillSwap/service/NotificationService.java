@@ -12,6 +12,10 @@ import org.springframework.stereotype.Service;
 import com.example.skillSwap.enums.Role;
 import com.example.skillSwap.model.User;
 import com.example.skillSwap.repository.UserRepository;
+import com.example.skillSwap.dto.LiveNotification;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +23,7 @@ public class NotificationService {
 
     private final JavaMailSender mailSender;
     private final UserRepository userRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     // 1. Sent to Guide when Student requests a topic
     @Async
@@ -205,6 +210,26 @@ public class NotificationService {
             System.out.println("✅ Onboarding Email sent successfully to " + toEmail);
         } catch (Exception e) {
             System.err.println("Failed to send onboarding email: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 🚀 Sends a real-time notification to a specific user via WebSockets.
+     */
+    public void sendLiveNotification(String userEmail, String message, String type) {
+        try {
+            LiveNotification notification = LiveNotification.builder()
+                    .id(UUID.randomUUID().toString())
+                    .message(message)
+                    .type(type)
+                    .timestamp(LocalDateTime.now().toString())
+                    .build();
+
+            // Send to the private queue of the user: /user/{email}/queue/notifications
+            messagingTemplate.convertAndSendToUser(userEmail, "/queue/notifications", notification);
+            System.out.println("🚀 Live notification sent to " + userEmail);
+        } catch (Exception e) {
+            System.err.println("❌ Failed to send live notification: " + e.getMessage());
         }
     }
 }

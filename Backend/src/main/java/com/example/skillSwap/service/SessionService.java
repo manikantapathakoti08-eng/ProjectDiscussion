@@ -96,6 +96,12 @@ public class SessionService {
         // 📧 Notification: Student -> Guide
         try {
             notificationService.sendBookingEmail(saved.getGuide().getEmail(), saved.getGuide().getName(), student.getName(), topicName);
+            // 🚀 WebSocket Live Notification
+            notificationService.sendLiveNotification(
+                saved.getGuide().getEmail(), 
+                "New project discussion request from " + student.getName() + " for: " + topicName, 
+                "INFO"
+            );
         } catch (Exception e) { 
             System.err.println("Notification skipped: " + e.getMessage()); 
         }
@@ -133,6 +139,12 @@ public class SessionService {
                 session.getStudent().getName(), 
                 currentUser.getName(), 
                 session.getProjectTopic()
+            );
+            // 🚀 WebSocket Live Notification
+            notificationService.sendLiveNotification(
+                session.getStudent().getEmail(), 
+                "Your request for '" + session.getProjectTopic() + "' was accepted by " + currentUser.getName() + "!", 
+                "SUCCESS"
             );
         } catch (Exception e) { 
             System.err.println("Acceptance Email failed: " + e.getMessage()); 
@@ -187,7 +199,22 @@ public class SessionService {
             availabilityRepository.save(slot);
         }
 
-        return sessionRepository.save(session);
+        Session saved = sessionRepository.save(session);
+
+        // 🚀 WebSocket Live Notification
+        try {
+            String notifyEmail = currentUser.getId().equals(session.getGuide().getId()) 
+                                ? session.getStudent().getEmail() 
+                                : session.getGuide().getEmail();
+            String partyName = currentUser.getName();
+            notificationService.sendLiveNotification(
+                notifyEmail, 
+                "A session for '" + session.getProjectTopic() + "' was cancelled by " + partyName, 
+                "WARNING"
+            );
+        } catch (Exception e) {}
+
+        return saved;
     }
 
     @Transactional
