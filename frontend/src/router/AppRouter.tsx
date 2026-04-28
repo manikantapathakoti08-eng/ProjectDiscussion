@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Landing from '../pages/Landing';
+import ForgotPassword from '../pages/ForgotPassword';
 import Login from '../pages/Login';
 import { ChangePassword } from '../pages/ChangePassword';
 import StudentDashboard from '../pages/StudentDashboard';
@@ -22,7 +22,7 @@ const RoleRoute = ({ children, allowedRoles }: { children: React.ReactNode, allo
   const user = useAuthStore(state => state.user);
   
   if (!user || !allowedRoles.includes(user.role)) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" replace />;
   }
   return <>{children}</>;
 };
@@ -31,8 +31,9 @@ export default function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Landing />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/change-password" element={
           <ProtectedRoute>
             <ChangePassword />
@@ -70,7 +71,7 @@ export default function AppRouter() {
           </ProtectedRoute>
         } />
         {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   );
