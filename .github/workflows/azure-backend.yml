@@ -65,5 +65,5 @@ jobs:
             # Start the newest uploaded application
             cd /home/azureuser/app
             NEWEST_JAR=$(ls -t *.jar | head -n 1)
-            nohup java -jar $NEWEST_JAR > app.log 2>&1 &
+            nohup java -jar $NEWEST_JAR > app.log 2>&1 < /dev/null &
 
