@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getAvailabilities } from '../../api/user.api';
 import type { UserProfileDTO } from '../../api/user.api';
 import { bookSession } from '../../api/session.api';
-import { X, Calendar, Clock, Loader2 } from 'lucide-react';
+import { X, Calendar, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface BookingModalProps {
