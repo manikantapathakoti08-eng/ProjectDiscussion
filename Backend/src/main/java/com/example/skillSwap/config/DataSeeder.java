@@ -65,7 +65,7 @@ public class DataSeeder implements CommandLineRunner {
         }
 
         // 4. Seed missing system accounts
-        seedUserIfMissing("manikantapahtakoti08@gmail.com", "System Admin", "Mani@062004", Role.ADMIN, null, null);
+        seedUserIfMissing("manikantapathakoti08@gmail.com", "System Admin", "Mani@062004", Role.ADMIN, null, null);
 
         System.out.println("✅ Data seeding check complete!");
     }
