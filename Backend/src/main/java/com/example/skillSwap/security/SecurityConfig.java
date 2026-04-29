@@ -41,6 +41,9 @@ public class SecurityConfig {
                         .authenticationEntryPoint(authenticationEntryPoint)
                         .accessDeniedHandler(accessDeniedHandler))
 
+                // Allow iframe for SockJS fallback
+                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
+
                 // Inside your filterChain method in SecurityConfig.java
 
                 .authorizeHttpRequests(auth -> auth
