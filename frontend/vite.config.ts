@@ -6,33 +6,42 @@ export default defineConfig({
   plugins: [
     react()
   ],
+  define: {
+    global: 'window',
+  },
   server: {
     port: 5173,
     proxy: {
       '/auth': {
-        target: 'http://localhost:8080',
+        target: 'https://52.184.102.62.nip.io',
         changeOrigin: true,
+        secure: false,
       },
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'https://52.184.102.62.nip.io',
         changeOrigin: true,
+        secure: false,
       },
       '/ws-chat': {
-        target: 'ws://localhost:8080',
+        target: 'https://52.184.102.62.nip.io',
         ws: true,
         changeOrigin: true,
+        secure: false,
       },
       '/swagger-ui': {
-        target: 'http://localhost:8080',
+        target: 'https://52.184.102.62.nip.io',
         changeOrigin: true,
+        secure: false,
       },
       '/api-docs': {
-        target: 'http://localhost:8080',
+        target: 'https://52.184.102.62.nip.io',
         changeOrigin: true,
+        secure: false,
       },
       '/uploads': {
-        target: 'http://localhost:8080',
+        target: 'https://52.184.102.62.nip.io',
         changeOrigin: true,
+        secure: false,
       }
     },
   },
