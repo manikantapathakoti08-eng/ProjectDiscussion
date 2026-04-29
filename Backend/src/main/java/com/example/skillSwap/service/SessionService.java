@@ -296,6 +296,13 @@ public class SessionService {
                     .toList();
         }
  
-        return new UserDashboardDTO(reqs, ments, hist, guideSlots, guideName, myStudents, null, null);
+        return UserDashboardDTO.builder()
+                .myRequests(reqs)
+                .myGuidanceSessions(ments)
+                .completedHistory(hist)
+                .assignedGuideAvailability(guideSlots)
+                .assignedGuideName(guideName)
+                .myStudents(myStudents)
+                .build();
     }
 }
