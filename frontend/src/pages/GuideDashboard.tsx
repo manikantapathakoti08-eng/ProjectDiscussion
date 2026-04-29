@@ -328,6 +328,37 @@ export default function GuideDashboard() {
                 </div>
               )}
             </div>
+
+            <div className="glass-panel flex-col" style={{ padding: '2rem', minHeight: '300px', gap: '1rem' }}>
+              <div className="flex-between">
+                <h3 className="heading-m flex-center gap-2" style={{ justifyContent: 'flex-start' }}><UserIcon size={20} color="var(--success)" /> My Students</h3>
+                <span className="badge badge-success">{dashboardData?.myStudents?.length || 0}</span>
+              </div>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>List of students assigned to you for project guidance.</p>
+              
+              <hr style={{ border: 'none', borderTop: '1px solid var(--glass-border)', margin: '0.5rem 0' }} />
+
+              {isDashboardLoading ? (
+                <div className="flex-center p-4"><Loader2 className="spinner" size={30} /></div>
+              ) : !dashboardData?.myStudents || dashboardData.myStudents.length === 0 ? (
+                <div className="flex-col flex-center" style={{ flex: 1, color: 'var(--text-muted)' }}>
+                  <UserIcon size={48} opacity={0.2} style={{ marginBottom: '1rem' }} />
+                  <p>No students assigned to you yet.</p>
+                </div>
+              ) : (
+                <div className="grid-responsive gap-4 mt-2">
+                  {dashboardData.myStudents.map((student: any) => (
+                    <div key={student.id} className="glass-card" style={{ padding: '1.2rem', borderRadius: '12px', background: 'rgba(255,255,255,0.02)' }}>
+                      <div className="flex-col">
+                        <span style={{ fontWeight: 600, fontSize: '1rem' }}>{student.name}</span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--accent-primary)' }}>{student.registrationNumber}</span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>{student.email}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="glass-panel flex-col" style={{ padding: '2rem', height: 'max-content', gap: '1.5rem' }}>

@@ -4,6 +4,9 @@ export interface UserDashboardDTO {
   myRequests: any[];
   myGuidanceSessions: any[];
   completedHistory: any[];
+  assignedGuideAvailability?: any[];
+  assignedGuideName?: string;
+  myStudents?: any[];
   guideStatusChange?: 'APPROVED' | 'REJECTED';
   guideStatusNotes?: string;
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
-import { LogOut, Home, Compass, User as UserIcon, Loader2, Calendar, BookOpen, CheckCircle2, Clock, Check } from 'lucide-react';
+import { LogOut, Home, User as UserIcon, Loader2, Calendar, BookOpen, CheckCircle2, Clock, Check } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { getDashboardData } from '../api/session.api';
@@ -36,8 +36,30 @@ export default function StudentDashboard() {
     }
   });
 
+  const bookMutation = useMutation({
+    mutationFn: async ({ availabilityId, topic }: { availabilityId: number, topic: string }) => {
+      const res = await axios.post(`/api/sessions/request/${availabilityId}?topicName=${encodeURIComponent(topic)}`, {}, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      return res.data;
+    },
+    onSuccess: () => {
+      refetch();
+      setShowBookingModal(false);
+      setSuccessMsg('Booking Request Sent!');
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+    },
+    onError: (err: any) => {
+      alert(err.response?.data?.message || 'Failed to book session');
+    }
+  });
+
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<any>(null);
+  const [topic, setTopic] = useState('');
   
 
 
@@ -70,10 +92,6 @@ export default function StudentDashboard() {
           <Link to="/dashboard" className="flex-center gap-4" style={{ padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', justifyContent: 'flex-start' }}>
             <Home size={20} color="var(--accent-primary)" />
             <span style={{ fontWeight: 500 }}>Dashboard</span>
-          </Link>
-          <Link to="/guides" className="flex-center gap-4" style={{ padding: '1rem', borderRadius: '12px', justifyContent: 'flex-start', color: 'var(--text-secondary)' }}>
-            <Compass size={20} />
-            <span style={{ fontWeight: 500 }}>Explore Guides</span>
           </Link>
           <Link to="/profile" className="flex-center gap-4" style={{ padding: '1rem', borderRadius: '12px', justifyContent: 'flex-start', color: 'var(--text-secondary)' }}>
             <UserIcon size={20} />
@@ -126,7 +144,6 @@ export default function StudentDashboard() {
                 <div className="flex-col flex-center" style={{ flex: 1, color: 'var(--text-muted)' }}>
                   <Calendar size={48} opacity={0.2} style={{ marginBottom: '1rem' }} />
                   <p>No active sessions found.</p>
-                  <Link to="/guides" style={{ marginTop: '1.2rem' }} className="btn-primary">Explore Guides</Link>
                 </div>
               ) : (
                 <div className="grid-responsive gap-6 mt-4">
@@ -222,6 +239,50 @@ export default function StudentDashboard() {
                 </div>
               )}
             </div>
+
+            {/* Guide Availability Section */}
+            <div className="glass-panel flex-col" style={{ padding: '2rem', gap: '1rem' }}>
+              <div className="flex-between">
+                <h3 className="heading-m flex-center gap-2" style={{ justifyContent: 'flex-start' }}>
+                   <Clock size={20} color="var(--accent-primary)" /> 
+                   Guide Availability: {data?.assignedGuideName || 'Your Guide'}
+                </h3>
+              </div>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                Book a 15-minute project discussion slot with your assigned guide.
+              </p>
+              
+              <hr style={{ border: 'none', borderTop: '1px solid var(--glass-border)', margin: '0.5rem 0' }} />
+
+              {(!data?.assignedGuideAvailability || data.assignedGuideAvailability.length === 0) ? (
+                <div className="flex-center" style={{ padding: '3rem', color: 'var(--text-muted)' }}>
+                  <p>No available slots found for your guide at the moment.</p>
+                </div>
+              ) : (
+                <div className="grid-responsive gap-4 mt-2">
+                  {data.assignedGuideAvailability.map((slot: any) => (
+                    <div key={slot.id} className="glass-card flex-between" style={{ padding: '1.2rem', borderRadius: '12px' }}>
+                      <div className="flex-col">
+                        <span style={{ fontWeight: 600 }}>{formatDate(slot.startTime)}</span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                          {new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(slot.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      <button 
+                        className="btn-primary" 
+                        style={{ padding: '0.5rem 1.2rem', fontSize: '0.85rem' }}
+                        onClick={() => {
+                          setSelectedSlot(slot);
+                          setShowBookingModal(true);
+                        }}
+                      >
+                        Book Slot
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </main>
@@ -232,13 +293,56 @@ export default function StudentDashboard() {
 
       {/* Success Overlay */}
       {showSuccess && (
-        <div className="blur-overlay animate-fade-in" style={{ animationDuration: '0.3s' }}>
+        <div className="blur-overlay animate-fade-in" style={{ animationDuration: '0.3s', zIndex: 1000 }}>
           <div className="glass-panel animate-scale-in" style={{ padding: '3rem 5rem', textAlign: 'center', boxShadow: '0 0 50px rgba(34, 197, 94, 0.4)', borderColor: 'var(--success)' }}>
             <div className="flex-center" style={{ width: '80px', height: '80px', background: 'var(--success)', borderRadius: '50%', margin: '0 auto 1.5rem', color: 'white' }}>
               <Check size={48} strokeWidth={3} />
             </div>
             <h2 className="heading-l" style={{ color: 'white', marginBottom: '0.5rem' }}>Done!</h2>
             <p style={{ color: 'var(--success)', fontWeight: 600, fontSize: '1.1rem' }}>{successMsg}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Booking Modal */}
+      {showBookingModal && (
+        <div className="blur-overlay animate-fade-in" style={{ zIndex: 900 }}>
+          <div className="glass-panel animate-scale-in" style={{ width: '100%', maxWidth: '500px', padding: '2.5rem' }}>
+            <h2 className="heading-m mb-2">Book Discussion Slot</h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+              Confirm your project discussion for <strong>{formatDate(selectedSlot?.startTime)}</strong>
+            </p>
+
+            <div className="flex-col gap-4">
+              <div className="flex-col gap-2">
+                <label style={{ fontSize: '0.9rem', fontWeight: 500 }}>Discussion Topic</label>
+                <input 
+                  type="text" 
+                  className="input-field" 
+                  placeholder="e.g. AI Model Integration, UI Design Review..." 
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                />
+              </div>
+
+              <div className="flex-center gap-4 mt-4">
+                <button 
+                  className="btn-secondary" 
+                  style={{ flex: 1 }}
+                  onClick={() => setShowBookingModal(false)}
+                >
+                  Cancel
+                </button>
+                <button 
+                  className="btn-primary" 
+                  style={{ flex: 1 }}
+                  disabled={!topic || bookMutation.isPending}
+                  onClick={() => bookMutation.mutate({ availabilityId: selectedSlot.id, topic })}
+                >
+                  {bookMutation.isPending ? 'Booking...' : 'Confirm Booking'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

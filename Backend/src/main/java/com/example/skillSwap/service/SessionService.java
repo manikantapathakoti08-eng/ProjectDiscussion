@@ -1,7 +1,10 @@
 package com.example.skillSwap.service;
 
+import com.example.skillSwap.dto.AvailabilityDTO;
 import com.example.skillSwap.dto.SessionResponseDTO;
 import com.example.skillSwap.dto.UserDashboardDTO;
+import com.example.skillSwap.dto.UserResponse;
+import com.example.skillSwap.enums.Role;
 import com.example.skillSwap.enums.SessionStatus;
 import com.example.skillSwap.exception.ApiException;
 import com.example.skillSwap.mapper.SessionMapper;
@@ -251,17 +254,48 @@ public class SessionService {
                 .filter(s -> s.getStudent().getId().equals(user.getId()))
                 .map(SessionMapper::toDTO)
                 .toList();
-
+ 
         List<SessionResponseDTO> ments = all.stream()
                 .filter(s -> s.getGuide() != null && s.getGuide().getId().equals(user.getId()))
                 .map(SessionMapper::toDTO)
                 .toList();
-
+ 
         List<SessionResponseDTO> hist = all.stream()
                 .filter(s -> s.getStatus() == SessionStatus.COMPLETED)
                 .map(SessionMapper::toDTO)
                 .toList();
-
-        return new UserDashboardDTO(reqs, ments, hist, null, null);
+ 
+        List<AvailabilityDTO> guideSlots = null;
+        String guideName = null;
+        List<UserResponse> myStudents = null;
+ 
+        if (user.getRole() == Role.STUDENT && user.getAssignedGuide() != null) {
+            guideName = user.getAssignedGuide().getName();
+            guideSlots = availabilityRepository.findByGuideAndIsBookedFalse(user.getAssignedGuide())
+                    .stream()
+                    .filter(a -> a.getStartTime().isAfter(LocalDateTime.now()))
+                    .map(a -> AvailabilityDTO.builder()
+                            .id(a.getId())
+                            .startTime(a.getStartTime())
+                            .endTime(a.getEndTime())
+                            .isBooked(a.isBooked())
+                            .build())
+                    .toList();
+        }
+ 
+        if (user.getRole() == Role.GUIDE) {
+            myStudents = userRepository.findByAssignedGuide(user)
+                    .stream()
+                    .map(u -> UserResponse.builder()
+                            .id(u.getId())
+                            .name(u.getName())
+                            .email(u.getEmail())
+                            .registrationNumber(u.getRegistrationNumber())
+                            .role(u.getRole())
+                            .build())
+                    .toList();
+        }
+ 
+        return new UserDashboardDTO(reqs, ments, hist, guideSlots, guideName, myStudents, null, null);
     }
 }
