@@ -89,19 +89,14 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // 🚀 Allow standard frontend ports and all Cloudflare Pages preview domains
-        configuration.setAllowedOriginPatterns(List.of(
-                "https://localhost:*",
-                "http://localhost:*",
-                "https://*.pages.dev",
-                "https://projectdiscussion.pages.dev"
-        ));
+        // 🚀 Allow all origins to resolve CORS preflight issues
+        configuration.setAllowedOriginPatterns(List.of("*"));
 
         // Allow all standard HTTP methods
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
 
-        // Allow the frontend to send the "Authorization" header (your JWT!)
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Cache-Control"));
+        // Allow all common headers
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Cache-Control", "Accept", "X-Requested-With", "Origin"));
 
         // Essential if you want the frontend to remember the user's login state
         configuration.setAllowCredentials(true);
