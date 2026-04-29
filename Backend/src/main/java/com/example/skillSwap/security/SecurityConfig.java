@@ -88,9 +88,14 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-
-        // 🚀 Allow all origins to resolve CORS preflight issues
-        configuration.setAllowedOriginPatterns(List.of("*"));
+        
+        // 🚀 Use explicit origins for better compatibility with allowCredentials(true)
+        configuration.setAllowedOrigins(List.of(
+                "https://projectdiscussion.pages.dev",
+                "https://*.pages.dev",
+                "http://localhost:5173",
+                "https://localhost:5173"
+        ));
 
         // Allow all standard HTTP methods
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
