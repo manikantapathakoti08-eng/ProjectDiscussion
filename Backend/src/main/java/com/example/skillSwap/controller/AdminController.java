@@ -6,12 +6,16 @@ import com.example.skillSwap.service.AdminService;
 import com.example.skillSwap.service.ProjectTopicRequestService;
 import com.example.skillSwap.model.ProjectTopicRequest;
 import com.example.skillSwap.dto.OnboardingRequest;
+import com.example.skillSwap.dto.UserResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -28,8 +32,8 @@ public class AdminController {
     }
 
     @GetMapping("/users")
-    public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.ok(adminService.getAllUsers());
+    public ResponseEntity<Page<UserResponse>> getAllUsers(Pageable pageable) {
+        return ResponseEntity.ok(adminService.getAllUsersPaged(pageable));
     }
 
     @GetMapping("/sessions")
@@ -74,7 +78,8 @@ public class AdminController {
     }
 
     @PostMapping("/onboard")
-    public ResponseEntity<User> onboardUser(@Valid @RequestBody OnboardingRequest request) {
-        return ResponseEntity.ok(adminService.onboardUser(request));
+    public ResponseEntity<Map<String, String>> onboardUser(@Valid @RequestBody OnboardingRequest request) {
+        adminService.onboardUser(request);
+        return ResponseEntity.ok(Map.of("message", "User onboarded successfully"));
     }
 }
