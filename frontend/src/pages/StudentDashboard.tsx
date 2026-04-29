@@ -4,10 +4,10 @@ import { LogOut, Home, User as UserIcon, Loader2, Calendar, BookOpen, CheckCircl
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { getDashboardData } from '../api/session.api';
-import axios from 'axios';
+import api from '../api/axiosInstance';
 
 export default function StudentDashboard() {
-  const { user, logout, accessToken } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const [now, setNow] = useState(new Date());
 
@@ -23,9 +23,7 @@ export default function StudentDashboard() {
 
   const completeMutation = useMutation({
     mutationFn: async (id: number) => {
-      const res = await axios.post(`/api/sessions/${id}/complete`, {}, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
+      const res = await api.post(`/api/sessions/${id}/complete`, {});
       return res.data;
     },
     onSuccess: () => {
@@ -38,9 +36,7 @@ export default function StudentDashboard() {
 
   const bookMutation = useMutation({
     mutationFn: async ({ availabilityId, topic }: { availabilityId: number, topic: string }) => {
-      const res = await axios.post(`/api/sessions/request/${availabilityId}?topicName=${encodeURIComponent(topic)}`, {}, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
+      const res = await api.post(`/api/sessions/request/${availabilityId}?topicName=${encodeURIComponent(topic)}`, {});
       return res.data;
     },
     onSuccess: () => {
