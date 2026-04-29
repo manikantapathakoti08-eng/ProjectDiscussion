@@ -60,7 +60,7 @@ public class SecurityConfig {
                         .permitAll()
 
                         // 2. WebSocket Handshake & Static Media
-                        .requestMatchers("/ws-chat/**", "/uploads/**").permitAll()
+                        .requestMatchers("/ws/**", "/uploads/**").permitAll()
 
                         // 3. Admin Only Endpoints
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
