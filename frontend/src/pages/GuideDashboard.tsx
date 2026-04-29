@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getPendingRequests, acceptSession, rejectSession, setAvailability, getGuideAvailability, deleteAvailability, addTopic, removeTopic } from '../api/guide.api';
+import { getPendingRequests, acceptSession, rejectSession, setAvailability, getGuideAvailability, deleteAvailability } from '../api/guide.api';
 import { getDashboardData } from '../api/session.api';
-import { LogOut, Home, Calendar, Activity, BookOpen, Loader2, Check, X, Clock, User as UserIcon, Plus, Sparkles, Trash2 } from 'lucide-react';
+import { LogOut, Home, Calendar, Activity, Loader2, Check, X, Clock, User as UserIcon, Sparkles } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import axios from 'axios';
@@ -13,8 +13,7 @@ export default function GuideDashboard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [showTopicModal, setShowTopicModal] = useState(false);
-  const [newTopicName, setNewTopicName] = useState('');
+
 
   const [dateStr, setDateStr] = useState('');
   const [startTimeStr, setStartTimeStr] = useState('');
@@ -145,34 +144,7 @@ export default function GuideDashboard() {
   };
 
 
-  const addTopicMutation = useMutation({
-    mutationFn: (name: string) => addTopic(name),
-    onSuccess: () => {
-      setShowTopicModal(false);
-      setNewTopicName('');
-      setSuccessMsg('Topic added to your profile!');
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
-      queryClient.invalidateQueries({ queryKey: ['user'] }); // Refresh user topics
-    }
-  });
 
-  const removeTopicMutation = useMutation({
-    mutationFn: (name: string) => removeTopic(name),
-    onSuccess: () => {
-      setSuccessMsg('Topic removed.');
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
-      queryClient.invalidateQueries({ queryKey: ['user'] });
-    }
-  });
-
-
-  const handleAddTopic = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTopicName) return;
-    addTopicMutation.mutate(newTopicName);
-  };
 
   const handleAddSlot = (e: React.FormEvent) => {
     e.preventDefault();
@@ -193,45 +165,14 @@ export default function GuideDashboard() {
             <Home size={20} color="var(--accent-primary)" />
             <span style={{ fontWeight: 500 }}>Dashboard</span>
           </Link>
-          <Link to="/dashboard" className="flex-center gap-4" style={{ padding: '1rem', borderRadius: '12px', justifyContent: 'flex-start', color: 'var(--text-secondary)' }}>
-            <BookOpen size={20} />
-            <span style={{ fontWeight: 500 }}>Student Portal</span>
-          </Link>
+
           <Link to="/profile" className="flex-center gap-4" style={{ padding: '1rem', borderRadius: '12px', justifyContent: 'flex-start', color: 'var(--text-secondary)' }}>
             <UserIcon size={20} />
             <span style={{ fontWeight: 500 }}>My Profile</span>
           </Link>
         </nav>
 
-        <hr style={{ opacity: 0.1 }} />
 
-        <div className="flex-col gap-4">
-           <div className="flex-between">
-              <h3 style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>My Topics</h3>
-              <button className="btn-primary" style={{ padding: '4px 8px', borderRadius: '6px' }} title="Add Topic" onClick={() => setShowTopicModal(true)}>
-                 <Plus size={14} />
-              </button>
-           </div>
-           
-           <div className="flex-col gap-2">
-              {user?.topics?.length === 0 ? (
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>No topics added.</p>
-              ) : (
-                user?.topics?.map((topic: string) => (
-                   <div key={topic} className="flex-between" style={{ background: 'rgba(255,255,255,0.03)', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.85rem' }}>
-                      <span style={{ fontWeight: 500 }}>{topic}</span>
-                      <button 
-                        onClick={() => removeTopicMutation.mutate(topic)}
-                        style={{ background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer', opacity: 0.6 }}
-                        title="Remove Topic"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                   </div>
-                ))
-              )}
-           </div>
-        </div>
 
         <div style={{ marginTop: 'auto' }}>
           <button onClick={handleLogout} className="btn-secondary" style={{ width: '100%', display: 'flex', justifyContent: 'center', borderColor: 'rgba(239, 68, 68, 0.3)', color: 'var(--error)' }}>
@@ -495,37 +436,7 @@ export default function GuideDashboard() {
         </div>
       )}
 
-      {/* Add Topic Modal */}
-      {showTopicModal && (
-        <div className="blur-overlay" style={{ background: 'rgba(2, 6, 23, 0.9)', zIndex: 1200 }}>
-          <div className="glass-panel animate-scale-in" style={{ width: '100%', maxWidth: '400px', padding: '2.5rem' }}>
-            <div className="flex-between" style={{ marginBottom: '2rem' }}>
-              <h2 className="heading-m flex-center gap-2"><Plus size={24} color="var(--accent-primary)" /> Add Topic</h2>
-              <button onClick={() => setShowTopicModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
-                <X size={24} />
-              </button>
-            </div>
 
-            <form onSubmit={handleAddTopic} className="flex-col gap-6">
-              <div className="flex-col gap-2">
-                <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Topic Name</label>
-                <input 
-                  type="text" 
-                  className="input-premium" 
-                  placeholder="e.g. Java, React, Python..."
-                  required
-                  value={newTopicName}
-                  onChange={e => setNewTopicName(e.target.value)}
-                />
-              </div>
-
-              <button type="submit" className="btn-primary" disabled={addTopicMutation.isPending} style={{ marginTop: '1rem' }}>
-                {addTopicMutation.isPending ? <Loader2 className="spinner" /> : 'Add to Profile'}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
