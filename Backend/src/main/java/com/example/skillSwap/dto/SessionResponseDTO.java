@@ -17,6 +17,5 @@ public record SessionResponseDTO(
         LocalDateTime guideLastHeartbeatAt,
         LocalDateTime studentLastHeartbeatAt,
         String disputeReason,
-        boolean isReviewed,
         String meetingLink
 ) {}

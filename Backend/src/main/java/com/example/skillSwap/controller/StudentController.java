@@ -56,20 +56,16 @@ public class StudentController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<UserProfileDTO>> searchGuides(@RequestParam String skill, @RequestParam(defaultValue = "0.0") Double minRating, Principal p) {
+    public ResponseEntity<List<UserProfileDTO>> searchGuides(@RequestParam String skill, Principal p) {
         User user = userService.getUserByEmail(p.getName());
         if (user.getRole() == com.example.skillSwap.enums.Role.STUDENT && user.getAssignedGuide() != null) {
             UserProfileDTO profile = userService.getUserProfile(user.getAssignedGuide().getId());
-            // Basic filter to match the skill if needed, but usually student only sees their guide
             return ResponseEntity.ok(List.of(profile));
         }
-        return ResponseEntity.ok(userService.searchGuidesAdvanced(skill, minRating));
+        return ResponseEntity.ok(List.of()); // Returns empty list if no assigned guide, search is disabled
     }
 
-    @GetMapping("/leaderboard")
-    public ResponseEntity<List<UserProfileDTO>> getLeaderboard() {
-        return ResponseEntity.ok(userService.getLeaderboard());
-    }
+
 
     @GetMapping("/all-profiles")
     public ResponseEntity<List<UserProfileDTO>> getAllProfiles(Principal p) {

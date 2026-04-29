@@ -90,6 +90,4 @@ public class Session {
     @Column(columnDefinition = "TEXT")
     private String disputeReason;
 
-    @OneToOne(mappedBy = "session", cascade = CascadeType.ALL)
-    private Review review;
 }

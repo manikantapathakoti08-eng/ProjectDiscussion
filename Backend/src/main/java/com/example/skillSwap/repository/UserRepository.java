@@ -26,15 +26,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
            "WHERE u.role = 'GUIDE' AND LOWER(t) LIKE LOWER(CONCAT('%', :topic, '%'))")
     List<User> findByTopic(@Param("topic") String topic);
 
-    // 🚀 Updated: Advanced search only returns verified GUIDES
-    @Query("SELECT DISTINCT u FROM User u " +
-           "JOIN u.topics t " +
-           "LEFT JOIN Review r ON r.reviewee = u " +
-           "WHERE u.role = 'GUIDE' " + 
-           "AND LOWER(t) LIKE LOWER(CONCAT('%', :topic, '%')) " +
-           "GROUP BY u.id " +
-           "HAVING COALESCE(AVG(r.rating), 0.0) >= :minRating")
-    List<User> findByTopicAndRating(@Param("topic") String topic, @Param("minRating") Double minRating);
+
 
     List<User> findByRole(Role role);
 }

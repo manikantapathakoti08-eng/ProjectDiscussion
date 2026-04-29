@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getAllProfiles, searchGuides } from '../api/user.api';
 import type { UserProfileDTO } from '../api/user.api';
 import { useAuthStore } from '../store/authStore';
-import { LogOut, Home, Compass, User as UserIcon, Search, Star, Loader2, ArrowLeft } from 'lucide-react';
+import { LogOut, Home, Compass, User as UserIcon, Search, Loader2, ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import BookingModal from '../components/session/BookingModal';
 import GuideProfileModal from '../components/mentor/GuideProfileModal';
@@ -110,11 +110,7 @@ export default function ExploreGuides() {
                         </div>
                         <div>
                           <h3 className="heading-m" style={{ fontSize: '1.2rem' }}>{guide.name}</h3>
-                          <div className="flex-center gap-1 mt-1" style={{ color: 'var(--warning)', fontSize: '0.9rem' }}>
-                            <Star size={16} fill="currentColor" />
-                            <span>{guide.averageRating?.toFixed(1) || 'NEW'}</span>
-                            <span style={{ color: 'var(--text-muted)' }}>({guide.totalReviews || 0} reviews)</span>
-                          </div>
+
                         </div>
                       </div>
                     </div>

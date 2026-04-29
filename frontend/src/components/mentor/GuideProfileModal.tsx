@@ -1,8 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
-import { getGuideReviews } from '../../api/session.api';
 import type { UserProfileDTO } from '../../api/user.api';
-import { X, Star, Calendar, MessageSquare, Loader2, Award } from 'lucide-react';
-import { format } from 'date-fns';
+import { X, Calendar, Award } from 'lucide-react';
 
 interface GuideProfileModalProps {
   guide: UserProfileDTO;
@@ -11,10 +8,6 @@ interface GuideProfileModalProps {
 }
 
 export default function GuideProfileModal({ guide, onClose, onBook }: GuideProfileModalProps) {
-  const { data: reviews, isLoading: reviewsLoading } = useQuery({
-    queryKey: ['guideReviews', guide.id],
-    queryFn: () => getGuideReviews(guide.id)
-  });
 
   return (
     <div className="blur-overlay" style={{ background: 'rgba(2, 6, 23, 0.85)', zIndex: 1100 }}>
@@ -57,17 +50,13 @@ export default function GuideProfileModal({ guide, onClose, onBook }: GuideProfi
             </div>
             <div style={{ marginBottom: '1rem' }}>
               <h2 className="heading-l" style={{ margin: 0, fontSize: '2.2rem' }}>{guide.name}</h2>
-              <div className="flex-center gap-2" style={{ justifyContent: 'flex-start', color: 'var(--warning)', fontWeight: 600 }}>
-                <Star size={18} fill="currentColor" />
-                <span>{guide.averageRating?.toFixed(1) || 'NEW'}</span>
-                <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>({guide.totalReviews || 0} reviews)</span>
-              </div>
+
             </div>
           </div>
         </div>
 
         {/* Content Area */}
-        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1.2fr 2fr', padding: '70px 3rem 2rem', gap: '3rem', overflow: 'hidden' }}>
+        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr', padding: '70px 3rem 2rem', gap: '3rem', overflow: 'hidden' }}>
           
           {/* Left Panel: Info */}
           <div className="flex-col gap-6" style={{ overflowY: 'auto' }}>
@@ -99,42 +88,7 @@ export default function GuideProfileModal({ guide, onClose, onBook }: GuideProfi
             </div>
           </div>
 
-          {/* Right Panel: Reviews */}
-          <div className="flex-col" style={{ overflow: 'hidden' }}>
-            <div className="flex-between" style={{ marginBottom: '1.5rem' }}>
-              <h4 className="flex-center gap-2" style={{ textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>
-                <MessageSquare size={16} /> Student Feedback
-              </h4>
-            </div>
 
-            <div className="flex-col gap-4" style={{ overflowY: 'auto', flex: 1, paddingRight: '0.5rem' }}>
-              {reviewsLoading ? (
-                <div className="flex-center py-10"><Loader2 className="spinner" /></div>
-              ) : !reviews || reviews.length === 0 ? (
-                <div className="flex-col flex-center py-20" style={{ opacity: 0.3 }}>
-                  <MessageSquare size={48} />
-                  <p className="mt-2">No reviews yet. Be the first to start a discussion!</p>
-                </div>
-              ) : (
-                reviews.map((review: any) => (
-                  <div key={review.id} className="glass-card" style={{ padding: '1.5rem', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <div className="flex-between" style={{ marginBottom: '0.8rem' }}>
-                      <span style={{ fontWeight: 600 }}>{review.reviewerName}</span>
-                      <div className="flex-center gap-1" style={{ color: 'var(--warning)' }}>
-                        {[...Array(review.rating)].map((_, i) => <Star key={i} size={14} fill="currentColor" />)}
-                      </div>
-                    </div>
-                    <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                      "{review.comment}"
-                    </p>
-                    <div className="mt-4" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                      {format(new Date(review.timestamp), 'MMM d, yyyy')}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
         </div>
 
         {/* Footer Actions */}

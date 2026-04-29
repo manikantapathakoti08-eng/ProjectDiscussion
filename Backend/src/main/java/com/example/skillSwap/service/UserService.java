@@ -20,7 +20,6 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final ReviewRepository reviewRepository;
     private final SessionRepository sessionRepository;
     private final AvailabilityRepository availabilityRepository;
 
@@ -56,45 +55,17 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserProfileDTO getUserProfile(Long userId) {
         User user = getUserById(userId);
-        Double avgRating = reviewRepository.getAverageRatingForUser(user);
-        Long totalReviews = reviewRepository.countReviewsForUser(user);
-
-        List<ReviewResponseDTO> reviews = reviewRepository.findByReviewee(user).stream()
-                .map(r -> ReviewResponseDTO.builder()
-                        .id(r.getId())
-                        .sessionId(r.getSession() != null ? r.getSession().getId() : null)
-                        .reviewerName(r.getReviewer().getName())
-                        .rating(r.getRating())
-                        .comment(r.getComment())
-                        .timestamp(r.getTimestamp())
-                        .build())
-                .toList();
 
         return UserProfileDTO.builder()
                 .id(user.getId()).name(user.getName()).email(user.getEmail())
                 .bio(user.getBio()).topics(user.getTopics())
-                .averageRating(avgRating != null ? avgRating : 0.0)
-                .totalReviews(totalReviews != null ? totalReviews : 0L)
-                .reviews(reviews).build();
+                .build();
     }
 
 
-    @Transactional(readOnly = true)
-    public List<UserProfileDTO> searchGuidesAdvanced(String topic, Double minRating) {
-        return userRepository.findByTopicAndRating(topic, minRating).stream()
-                .map(user -> getUserProfile(user.getId())).toList();
-    }
 
-   // 1. Updated: Leaderboard should only show top GUIDES
-    @Transactional(readOnly = true)
-    public List<UserProfileDTO> getLeaderboard() {
-        // We ensure we only pull users who actually have the GUIDE role
-        return reviewRepository.findTopGuides().stream()
-                .filter(user -> user.getRole() == Role.GUIDE) // 🛡️ Double-check filter
-                .limit(5)
-                .map(user -> getUserProfile(user.getId()))
-                .toList();
-    }
+
+
 
     // 2. Updated: 'Find All' usually implies finding all Guides for discovery
     @Transactional(readOnly = true)

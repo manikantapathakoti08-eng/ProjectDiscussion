@@ -18,12 +18,4 @@ export const bookSession = async (availabilityId: number, topicName: string) => 
   return data;
 };
 
-export const submitReview = async (id: number, rating: number, comment: string) => {
-  const { data } = await api.post(`/api/sessions/${id}/review`, { rating, comment });
-  return data;
-};
 
-export const getGuideReviews = async (guideId: number) => {
-  const { data } = await api.get(`/api/sessions/guide/${guideId}/reviews`);
-  return data;
-};

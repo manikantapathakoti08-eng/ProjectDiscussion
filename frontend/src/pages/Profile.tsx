@@ -2,9 +2,8 @@ import { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getProfileByEmail, getMyStats, updateProfile, changePassword } from '../api/user.api';
-import { Mail, Shield, BookOpen, GraduationCap, Edit3, Save, Loader2, ArrowLeft, Lock, CheckCircle, Star, MessageSquare, Calendar } from 'lucide-react';
+import { Mail, Shield, BookOpen, GraduationCap, Edit3, Save, Loader2, ArrowLeft, Lock, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { format } from 'date-fns';
 
 export default function Profile() {
   const { user, setUser } = useAuthStore();
@@ -150,43 +149,10 @@ export default function Profile() {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem' }}>
-           {user?.role === 'GUIDE' && (
-             <div className="glass-panel" style={{ padding: '2rem' }}>
-                <h3 className="heading-m mb-6 flex-center gap-2" style={{ justifyContent: 'flex-start' }}><Star size={20} color="var(--warning)" /> Discussion Feedback</h3>
-                <div className="flex-col gap-4">
-                   {!profile?.reviews || profile.reviews.length === 0 ? (
-                     <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>No reviews yet.</p>
-                   ) : (
-                     profile.reviews.map((rev: any) => (
-                       <div key={rev.id} style={{ padding: '1.2rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                          <div className="flex-between">
-                             <span style={{ fontWeight: 600 }}>{rev.reviewerName}</span>
-                             <div className="flex-center gap-1" style={{ color: 'var(--warning)' }}>
-                                {[...Array(rev.rating)].map((_, i) => <Star key={i} size={14} fill="currentColor" />)}
-                             </div>
-                          </div>
-                          <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', margin: '0.6rem 0' }}>"{rev.comment}"</p>
-                          <div className="flex-center gap-4" style={{ justifyContent: 'flex-start', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-                             <span className="flex-center gap-1"><Calendar size={12} /> {format(new Date(rev.timestamp), 'MMM d, yyyy')}</span>
-                             <span className="flex-center gap-1"><MessageSquare size={12} /> Verified Session</span>
-                          </div>
-                       </div>
-                     ))
-                   )}
-                </div>
-             </div>
-           )}
+
 
            <div className="flex-col gap-6">
-              <div className="glass-panel" style={{ padding: '2rem' }}>
-                <h3 className="heading-m mb-6">Account Overview</h3>
-                <div className="flex-col gap-6">
-                   <div className="flex-col gap-1">
-                      <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Reputation</span>
-                      <p style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--warning)' }}>{profile?.averageRating?.toFixed(1) || '0.0'} ★ ({profile?.totalReviews || 0} reviews)</p>
-                   </div>
-                </div>
-              </div>
+
 
               <div className="glass-panel" style={{ padding: '2rem' }}>
                 <h3 className="heading-m mb-4 flex-center gap-2" style={{ justifyContent: 'flex-start' }}><Lock size={20} color="var(--accent-primary)" /> Security</h3>

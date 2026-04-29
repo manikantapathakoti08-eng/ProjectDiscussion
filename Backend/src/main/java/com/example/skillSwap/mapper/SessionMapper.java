@@ -32,7 +32,6 @@ public class SessionMapper {
                 session.getGuideLastHeartbeatAt(),
                 session.getStudentLastHeartbeatAt(),
                 session.getDisputeReason(),
-                session.getReview() != null,
                 session.getMeetingLink()
         );
     }

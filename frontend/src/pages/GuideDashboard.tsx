@@ -189,12 +189,7 @@ export default function GuideDashboard() {
             <p className="delay-100 animate-fade-up" style={{ color: 'var(--text-secondary)' }}>Review pending student requests and manage your project discussion schedule.</p>
           </div>
           
-          <div className="glass-panel flex-center gap-6 delay-100 animate-fade-up" style={{ padding: '1rem 2rem' }}>
-            <div>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Reputation</p>
-              <h3 className="heading-m text-gradient" style={{ margin: 0 }}>{user?.averageRating?.toFixed(1) || '0.0'} ★</h3>
-            </div>
-          </div>
+
         </header>
 
 

@@ -12,7 +12,5 @@ public class UserProfileDTO {
     private String email;
     private String bio;          
     private List<String> topics;  
-    private Double averageRating;
-    private Long totalReviews;
-    private List<ReviewResponseDTO> reviews;
+
 }

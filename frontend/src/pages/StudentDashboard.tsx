@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
-import { LogOut, Home, Compass, User as UserIcon, Loader2, Calendar, BookOpen, CheckCircle2, Star, Clock, AlertTriangle, ShieldAlert, Check } from 'lucide-react';
+import { LogOut, Home, Compass, User as UserIcon, Loader2, Calendar, BookOpen, CheckCircle2, Clock, AlertTriangle, ShieldAlert, Check } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { getDashboardData, submitReview } from '../api/session.api';
+import { getDashboardData } from '../api/session.api';
 import axios from 'axios';
 
 export default function StudentDashboard() {
@@ -42,23 +42,7 @@ export default function StudentDashboard() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   
-  const [showReviewModal, setShowReviewModal] = useState<number | null>(null);
-  const [reviewRating, setReviewRating] = useState(5);
-  const [reviewComment, setReviewComment] = useState('');
 
-  const reviewMutation = useMutation({
-    mutationFn: ({ id, rating, comment }: { id: number, rating: number, comment: string }) => 
-      submitReview(id, rating, comment),
-    onSuccess: () => {
-      refetch();
-      setShowReviewModal(null);
-      setReviewRating(5);
-      setReviewComment('');
-      setSuccessMsg('Feedback Submitted!');
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
-    }
-  });
 
   useEffect(() => {
     let interval: any;
@@ -303,18 +287,7 @@ export default function StudentDashboard() {
                                 Finalize Session
                               </button>
                            )}
-                           {req.status === 'COMPLETED' && !req.isReviewed && (
-                              <button 
-                                className="btn-primary" 
-                                style={{ fontSize: '0.8rem', padding: '0.5rem 1.1rem', background: 'var(--success)' }}
-                                onClick={() => setShowReviewModal(req.id)}
-                              >
-                                <Star size={14} fill="currentColor" /> Rate Guide
-                              </button>
-                           )}
-                           {req.status === 'COMPLETED' && req.isReviewed && (
-                              <span className="badge badge-info" style={{ fontSize: '0.7rem' }}>Reviewed ✓</span>
-                           )}
+
                            {req.status === 'DISPUTED' && (
                                 <div className="flex-center gap-2" style={{ 
                                   color: 'var(--error)', 
@@ -370,39 +343,7 @@ export default function StudentDashboard() {
         </div>
       )}
 
-      {/* Review Modal */}
-      {showReviewModal && (
-        <div className="blur-overlay" style={{ background: 'rgba(0,0,0,0.6)' }}>
-          <div className="glass-panel animate-scale-in" style={{ width: '100%', maxWidth: '500px', padding: '2.5rem' }}>
-             <div className="flex-between">
-                <h3 className="heading-m">Rate Discussion</h3>
-                <button onClick={() => setShowReviewModal(null)} className="flex-center" style={{ background: 'none', border: 'none', color: 'var(--text-muted)' }}>
-                  <Star size={24} />
-                </button>
-             </div>
-             
-             <div className="flex-col gap-4 mt-6">
-                <div style={{ textAlign: 'center' }}>
-                  <div className="flex-center gap-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button key={star} onClick={() => setReviewRating(star)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                        <Star size={32} fill={star <= reviewRating ? 'var(--warning)' : 'none'} color={star <= reviewRating ? 'var(--warning)' : 'var(--text-muted)'} />
-                      </button>
-                    ))}
-                  </div>
-                </div>
 
-                <div className="flex-col gap-2">
-                  <textarea className="input-premium" style={{ minHeight: '120px', resize: 'none' }} placeholder="Your feedback..." value={reviewComment} onChange={(e) => setReviewComment(e.target.value)} />
-                </div>
-
-                <button className="btn-primary" onClick={() => reviewMutation.mutate({ id: showReviewModal, rating: reviewRating, comment: reviewComment })} disabled={!reviewComment.trim()}>
-                   Submit
-                </button>
-             </div>
-          </div>
-        </div>
-      )}
 
       {/* Success Overlay */}
       {showSuccess && (
