@@ -17,19 +17,7 @@ public class GuideController {
 
     private final UserService userService;
 
-    @PostMapping("/add-topic")
-    @PreAuthorize("hasRole('GUIDE')")
-    public ResponseEntity<User> addTopic(@RequestParam String topicName, Principal principal) {
-        User guide = userService.getUserByEmail(principal.getName());
-        return ResponseEntity.ok(userService.addTopic(guide, topicName));
-    }
 
-    @DeleteMapping("/remove-topic")
-    @PreAuthorize("hasRole('GUIDE')")
-    public ResponseEntity<User> removeTopic(@RequestParam String topicName, Principal principal) {
-        User guide = userService.getUserByEmail(principal.getName());
-        return ResponseEntity.ok(userService.removeTopic(guide, topicName));
-    }
 
     @PutMapping("/profile/bio")
     @PreAuthorize("hasRole('GUIDE')")
