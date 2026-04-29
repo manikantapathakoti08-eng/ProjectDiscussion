@@ -41,19 +41,7 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getAllSessions());
     }
 
-    @GetMapping("/sessions/disputed")
-    public ResponseEntity<List<Session>> getDisputedSessions() {
-        return ResponseEntity.ok(adminService.getDisputedSessions());
-    }
 
-    @PostMapping("/sessions/{sessionId}/resolve")
-    public ResponseEntity<String> resolveDispute(
-            @PathVariable Long sessionId, 
-            @RequestParam boolean faultIsGuide, 
-            @RequestParam String resolutionNotes) {
-        adminService.resolveDispute(sessionId, faultIsGuide, resolutionNotes);
-        return ResponseEntity.ok("Dispute resolved successfully.");
-    }
 
     // TOPIC REQUESTS (New System)
     @GetMapping("/project-requests/pending")

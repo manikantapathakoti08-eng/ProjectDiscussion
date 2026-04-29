@@ -12,10 +12,5 @@ public record SessionResponseDTO(
         String guideName,
         LocalDateTime startTime,
         LocalDateTime endTime,
-        LocalDateTime guideJoinedAt,
-        LocalDateTime studentJoinedAt,
-        LocalDateTime guideLastHeartbeatAt,
-        LocalDateTime studentLastHeartbeatAt,
-        String disputeReason,
         String meetingLink
 ) {}

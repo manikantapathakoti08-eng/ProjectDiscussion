@@ -39,32 +39,9 @@ export default function GuideDashboard() {
     queryFn: getDashboardData
   });
 
-  const [activeHeartbeatSessionId, setActiveHeartbeatSessionId] = useState<number | null>(null);
 
-  useEffect(() => {
-    let interval: any;
-    if (activeHeartbeatSessionId) {
-      interval = setInterval(() => {
-        axios.post(`/api/sessions/${activeHeartbeatSessionId}/heartbeat`, {}, {
-          headers: { Authorization: `Bearer ${accessToken}` }
-        }).catch(err => console.error("Heartbeat failed", err));
-      }, 60000);
-    }
-    return () => clearInterval(interval);
-  }, [activeHeartbeatSessionId, accessToken]);
 
-  const joinMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await axios.post(`/api/sessions/${id}/join`, {}, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
-      return id;
-    },
-    onSuccess: (id) => {
-      refetchDashboard();
-      setActiveHeartbeatSessionId(id);
-    }
-  });
+
 
   const completeMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -312,7 +289,6 @@ export default function GuideDashboard() {
                                    target="_blank" 
                                    rel="noreferrer" 
                                    className="btn-join-premium" 
-                                   onClick={() => joinMutation.mutate(sess.id)}
                                  >
                                    <Sparkles size={16} /> Enter 15-Min Meeting
                                  </a>

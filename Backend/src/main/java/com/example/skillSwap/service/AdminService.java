@@ -60,16 +60,7 @@ public class AdminService {
         return sessionRepository.findAll();
     }
 
-    @Transactional(readOnly = true)
-    public List<Session> getDisputedSessions() {
-        return sessionRepository.findByStatus(SessionStatus.DISPUTED);
-    }
 
-    // ---------------- DISPUTE RESOLUTION ----------------
-    @Transactional
-    public void resolveDispute(Long sessionId, boolean faultIsGuide, String resolutionNotes) {
-        sessionService.resolveDispute(sessionId, faultIsGuide, resolutionNotes);
-    }
 
     // ---------------- USER ONBOARDING ----------------
     @Transactional
@@ -96,7 +87,14 @@ public class AdminService {
         // Assign guide if student
         if (request.getRole() == Role.STUDENT && request.getAssignedGuideRegistrationNumber() != null) {
             User guide = userRepository.findByRegistrationNumber(request.getAssignedGuideRegistrationNumber())
-                    .orElseThrow(() -> new ApiException("Assigned Guide not found with registration number: " + request.getAssignedGuideRegistrationNumber()));
+                    .orElseGet(() -> {
+                        try {
+                            return userRepository.findById(Long.parseLong(request.getAssignedGuideRegistrationNumber()))
+                                    .orElseThrow(() -> new ApiException("Assigned Guide not found with ID or registration number: " + request.getAssignedGuideRegistrationNumber()));
+                        } catch (NumberFormatException e) {
+                            throw new ApiException("Assigned Guide not found with registration number: " + request.getAssignedGuideRegistrationNumber());
+                        }
+                    });
             
             if (guide.getRole() != Role.GUIDE) {
                 throw new ApiException("The assigned user is not a Guide");

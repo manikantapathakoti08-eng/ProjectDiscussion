@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
-import { LogOut, Home, Compass, User as UserIcon, Loader2, Calendar, BookOpen, CheckCircle2, Clock, AlertTriangle, ShieldAlert, Check } from 'lucide-react';
+import { LogOut, Home, Compass, User as UserIcon, Loader2, Calendar, BookOpen, CheckCircle2, Clock, Check } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { getDashboardData } from '../api/session.api';
@@ -36,59 +36,12 @@ export default function StudentDashboard() {
     }
   });
 
-  const [showDisputeModal, setShowDisputeModal] = useState<number | null>(null);
-  const [disputeReason, setDisputeReason] = useState('');
-  const [activeHeartbeatId, setActiveHeartbeatId] = useState<number | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   
 
 
-  useEffect(() => {
-    let interval: any;
-    if (activeHeartbeatId) {
-      interval = setInterval(() => {
-        axios.post(`/api/sessions/${activeHeartbeatId}/heartbeat`, {}, {
-          headers: { Authorization: `Bearer ${accessToken}` }
-        }).catch(() => {});
-      }, 60000);
-    }
-    return () => clearInterval(interval);
-  }, [activeHeartbeatId, accessToken]);
 
-  const disputeMutation = useMutation({
-    mutationFn: async ({ id, reason }: { id: number, reason: string }) => {
-      const res = await axios.post(`/api/sessions/${id}/dispute?reason=${encodeURIComponent(reason)}`, {}, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
-      return res.data;
-    },
-    onSuccess: () => {
-      refetch();
-      setShowDisputeModal(null);
-      setDisputeReason('');
-      setSuccessMsg('Dispute Raised! Admin Review Pending.');
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
-    },
-    onError: (error: any) => {
-      const msg = error.response?.data?.message || error.response?.data || error.message;
-      alert(`Failed to raise dispute: ${msg}`);
-    }
-  });
-
-  const joinMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await axios.post(`/api/sessions/${id}/join`, {}, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
-      return id;
-    },
-    onSuccess: (id) => {
-      refetch();
-      setActiveHeartbeatId(id);
-    }
-  });
 
   const handleLogout = () => {
     logout();
@@ -236,36 +189,11 @@ export default function StudentDashboard() {
                                    target="_blank" 
                                    rel="noreferrer" 
                                    className="btn-join-premium" 
-                                   onClick={() => joinMutation.mutate(req.id)}
                                  >
                                    Join 15-Min Meeting
                                  </a>
                                );
                             })()}
-                           
-                           {req.status === 'ACCEPTED' && (() => {
-                              const start = new Date(req.startTime).getTime();
-                              const now = new Date().getTime();
-                              const tenMinsLate = start + (10 * 60 * 1000);
-                              
-                              if (now > tenMinsLate && !req.guideJoinedAt) {
-                                return (
-                                  <button 
-                                    className="btn-secondary" 
-                                    style={{ 
-                                      fontSize: '0.8rem', 
-                                      padding: '0.5rem 1rem',
-                                      color: 'var(--error)',
-                                      borderColor: 'rgba(239, 68, 68, 0.2)'
-                                    }}
-                                    onClick={() => setShowDisputeModal(req.id)}
-                                  >
-                                    <AlertTriangle size={14} /> Report No-Show
-                                  </button>
-                                );
-                              }
-                              return null;
-                           })()}
 
                            {req.status === 'ACCEPTED' && (
                               <button 
@@ -287,20 +215,6 @@ export default function StudentDashboard() {
                                 Finalize Session
                               </button>
                            )}
-
-                           {req.status === 'DISPUTED' && (
-                                <div className="flex-center gap-2" style={{ 
-                                  color: 'var(--error)', 
-                                  padding: '0.4rem 0.8rem', 
-                                  background: 'rgba(239, 68, 68, 0.1)', 
-                                  borderRadius: '20px',
-                                  border: '1px solid rgba(239, 68, 68, 0.2)',
-                                  animation: 'pulse-soft 2s infinite'
-                                }}>
-                                   <ShieldAlert size={14} />
-                                   <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>UNDER REVIEW</span>
-                                </div>
-                           )}
                         </div>
                       </div>
                     </div>
@@ -312,36 +226,7 @@ export default function StudentDashboard() {
         )}
       </main>
 
-      {/* Dispute Modal */}
-      {showDisputeModal && (
-        <div className="flex-center" style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', padding: '1rem' }}>
-          <div className="glass-panel animate-fade-up" style={{ maxWidth: '500px', width: '100%', padding: '2.5rem', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
-             <div className="flex-center" style={{ width: '50px', height: '50px', borderRadius: '16px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--error)', marginBottom: '1.5rem' }}>
-                <ShieldAlert size={28} />
-             </div>
-             
-             <h3 className="heading-m">Report Issue</h3>
-             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-                Please provide details about the session issue.
-             </p>
 
-             <textarea 
-                className="input-premium" 
-                style={{ minHeight: '120px', padding: '1rem', fontSize: '0.95rem', marginBottom: '1.5rem' }}
-                placeholder="Describe the problem..."
-                value={disputeReason}
-                onChange={(e) => setDisputeReason(e.target.value)}
-             />
-
-             <div className="flex-center gap-4" style={{ justifyContent: 'flex-end' }}>
-                <button className="btn-secondary" onClick={() => setShowDisputeModal(null)}>Cancel</button>
-                <button className="btn-primary" style={{ background: 'var(--error)' }} onClick={() => disputeMutation.mutate({ id: showDisputeModal, reason: disputeReason })}>
-                   Raise Dispute
-                </button>
-             </div>
-          </div>
-        </div>
-      )}
 
 
 

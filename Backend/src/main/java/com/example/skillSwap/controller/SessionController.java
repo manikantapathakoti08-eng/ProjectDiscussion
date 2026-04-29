@@ -72,23 +72,7 @@ public class SessionController {
                 .map(SessionMapper::toDTO).collect(Collectors.toList()));
     }
 
-    // Learner hits this if the Mentor no-shows
-    @PostMapping("/{id}/dispute")
-    public ResponseEntity<String> disputeSession(
-            @PathVariable Long id, 
-            @RequestParam String reason,
-            Principal principal
-    ) {
-        sessionService.raiseDispute(id, reason, principal.getName());
-        return ResponseEntity.ok("Dispute raised successfully. An Admin will review it.");
-    }
 
-    @PostMapping("/{id}/heartbeat")
-    @PreAuthorize("hasAnyRole('STUDENT', 'GUIDE')")
-    public ResponseEntity<Void> recordHeartbeat(@PathVariable Long id, Principal principal) {
-        sessionService.recordHeartbeat(id, principal.getName());
-        return ResponseEntity.ok().build();
-    }
 
     @GetMapping("/dashboard")
     @PreAuthorize("hasAnyRole('STUDENT', 'GUIDE', 'ADMIN')")
@@ -97,11 +81,5 @@ public class SessionController {
         return ResponseEntity.ok(sessionService.getUserDashboard(user));
     }
 
-    @PostMapping("/{id}/join")
-    @PreAuthorize("hasAnyRole('STUDENT', 'GUIDE')")
-    public ResponseEntity<SessionResponseDTO> joinSession(@PathVariable Long id, Principal principal) {
-        User user = userService.getUserByEmail(principal.getName());
-        Session session = sessionService.recordJoinTime(id, user);
-        return ResponseEntity.ok(SessionMapper.toDTO(session));
-    }
+
 }

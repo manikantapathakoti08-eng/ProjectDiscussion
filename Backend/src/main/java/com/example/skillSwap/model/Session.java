@@ -75,19 +75,4 @@ public class Session {
     @Column(columnDefinition = "TEXT") // TEXT allows for long explanations
     private String adminNotes;
 
-    private String disputedBy;
-
-    private String guideProofNotes; // Guide writes: "Explained project architecture for 50 mins"
-
-    private LocalDateTime guideJoinedAt;
-
-    private LocalDateTime studentJoinedAt;
-
-    private LocalDateTime guideLastHeartbeatAt;
-
-    private LocalDateTime studentLastHeartbeatAt;
-
-    @Column(columnDefinition = "TEXT")
-    private String disputeReason;
-
 }

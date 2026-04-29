@@ -217,58 +217,7 @@ public class SessionService {
         return saved;
     }
 
-    @Transactional
-    public void recordHeartbeat(Long sessionId, String email) {
-        Session session = getSession(sessionId);
-        LocalDateTime now = LocalDateTime.now();
 
-        if (session.getGuide().getEmail().equals(email)) {
-            session.setGuideLastHeartbeatAt(now);
-        } else if (session.getStudent().getEmail().equals(email)) {
-            session.setStudentLastHeartbeatAt(now);
-        }
-        sessionRepository.save(session);
-    }
-
-    @Transactional
-    public Session recordJoinTime(Long sessionId, User user) {
-        Session session = getSession(sessionId);
-        LocalDateTime now = LocalDateTime.now();
-
-        if (session.getGuide().getId().equals(user.getId())) {
-            session.setGuideJoinedAt(now);
-        } else if (session.getStudent().getId().equals(user.getId())) {
-            session.setStudentJoinedAt(now);
-        }
-        return sessionRepository.save(session);
-    }
-
-    @Transactional
-    public void raiseDispute(Long sessionId, String reason, String email) {
-        Session session = getSession(sessionId);
-        session.setStatus(SessionStatus.DISPUTED);
-        session.setDisputeReason(reason);
-        session.setDisputedBy(email);
-        sessionRepository.save(session);
-    }
-
-    @Transactional
-    public void resolveDispute(Long sessionId, boolean faultIsGuide, String adminNotes) {
-        Session session = getSession(sessionId);
-
-        if (session.getStatus() != SessionStatus.DISPUTED) {
-            throw new ApiException("This session is not currently under dispute");
-        }
-
-        if (faultIsGuide) {
-            session.setStatus(SessionStatus.REFUNDED);
-        } else {
-            session.setStatus(SessionStatus.COMPLETED); 
-        }
-
-        session.setAdminNotes(adminNotes); 
-        sessionRepository.save(session);
-    }
 
     @Transactional
     public void adminCancelSession(Long sessionId, String reason) {

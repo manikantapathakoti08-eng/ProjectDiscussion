@@ -27,11 +27,6 @@ public class SessionMapper {
                 guideName,
                 session.getStartTime(),
                 session.getEndTime(),
-                session.getGuideJoinedAt(),
-                session.getStudentJoinedAt(),
-                session.getGuideLastHeartbeatAt(),
-                session.getStudentLastHeartbeatAt(),
-                session.getDisputeReason(),
                 session.getMeetingLink()
         );
     }
