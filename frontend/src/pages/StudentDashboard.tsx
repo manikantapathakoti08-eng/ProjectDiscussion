@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { LogOut, Home, User as UserIcon, Loader2, Calendar, BookOpen, CheckCircle2, Clock, Check } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getDashboardData } from '../api/session.api';
+import type { UserDashboardDTO } from '../api/session.api';
 import api from '../api/axiosInstance';
 
 export default function StudentDashboard() {
@@ -16,10 +17,17 @@ export default function StudentDashboard() {
     return () => clearInterval(timer);
   }, []);
 
-  const { data, isLoading, isError, refetch } = useQuery({
+  const queryClient = useQueryClient();
+
+  const { data, isLoading, isError, error } = useQuery<UserDashboardDTO, any>({
     queryKey: ['dashboardData'],
-    queryFn: getDashboardData
+    queryFn: getDashboardData,
+    retry: false,
   });
+
+  const errorMessage = isError
+    ? (error as any)?.response?.data?.message || (error as any)?.message || 'Failed to load dashboard data. Please try refreshing.'
+    : '';
 
   const completeMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -27,7 +35,7 @@ export default function StudentDashboard() {
       return res.data;
     },
     onSuccess: () => {
-      refetch();
+      queryClient.invalidateQueries({ queryKey: ['dashboardData'] });
       setSuccessMsg('Confirmation Sent!');
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
@@ -40,7 +48,7 @@ export default function StudentDashboard() {
       return res.data;
     },
     onSuccess: () => {
-      refetch();
+      queryClient.invalidateQueries({ queryKey: ['dashboardData'] });
       setShowBookingModal(false);
       setSuccessMsg('Booking Request Sent!');
       setShowSuccess(true);
@@ -124,7 +132,7 @@ export default function StudentDashboard() {
           </div>
         ) : isError ? (
            <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', color: 'var(--error)' }}>
-             Failed to load dashboard data. Please try refreshing.
+             {errorMessage}
            </div>
         ) : (
           <div className="delay-200 animate-fade-up flex-col gap-8">
