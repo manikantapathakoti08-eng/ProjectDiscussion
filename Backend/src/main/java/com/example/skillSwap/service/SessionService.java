@@ -32,7 +32,9 @@ public class SessionService {
     private final NotificationService notificationService;
 
     @Transactional
-    public Session createProjectRequest(Long availabilityId, String topicName, User student) {
+    public Session createProjectRequest(Long availabilityId, String topicName, User detachedStudent) {
+        User student = userRepository.findById(detachedStudent.getId())
+                .orElseThrow(() -> new ApiException("User not found"));
         // 1. One meeting per day limit
         LocalDateTime startOfDay = LocalDateTime.now().with(LocalTime.MIN);
         LocalDateTime endOfDay = LocalDateTime.now().with(LocalTime.MAX);
@@ -247,7 +249,9 @@ public class SessionService {
     }
 
     @Transactional
-    public UserDashboardDTO getUserDashboard(User user) {
+    public UserDashboardDTO getUserDashboard(User detachedUser) {
+        User user = userRepository.findById(detachedUser.getId())
+                .orElseThrow(() -> new ApiException("User not found"));
         List<Session> all = sessionRepository.findAllByStudentOrGuide(user, user);
         
         List<SessionResponseDTO> reqs = all.stream()
